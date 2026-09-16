@@ -101,15 +101,18 @@ const chapters = [
 
 const ui = {
   zh: { course: '可视化导论', title: '构页有方', subtitle: '用理论理解空间，用交互验证布局。', home: '课程目录', progress: '课程进度', available: '已上线', enter: '进入章节', back: '返回章节目录', explain: '讲解', code: '关键代码', demo: '动态演示', case: '贯穿案例', copy: '复制代码', copied: '已复制', previous: '上一章', next: '下一章', question: '案例问题', principle: '本章原则', tags: '知识标签', control: '调整参数，观察布局如何重新计算', reset: '重置', current: '当前状态', desktop: '桌面端教学站', d3: 'D3 可视化模型' },
-  en: { course: 'Introduction to Visualization', title: '构页有方', subtitle: 'Understand space through theory. Validate layout through interaction.', home: 'Course map', progress: 'Progress', available: 'Available', enter: 'Enter chapter', back: 'Back to course map', explain: 'Explanation', code: 'Key code', demo: 'Interactive demo', case: 'Running case', copy: 'Copy code', copied: 'Copied', previous: 'Previous', next: 'Next', question: 'Case question', principle: 'Chapter principle', tags: 'Knowledge tags', control: 'Adjust the controls and observe the layout recalculate', reset: 'Reset', current: 'Current state', desktop: 'Desktop teaching site', d3: 'D3 visual model' }
+  en: { course: 'Introduction to Visualization', title: 'Layout with Intent', subtitle: 'Understand space through theory. Validate layout through interaction.', home: 'Course map', progress: 'Progress', available: 'Available', enter: 'Enter chapter', back: 'Back to course map', explain: 'Explanation', code: 'Key code', demo: 'Interactive demo', case: 'Running case', copy: 'Copy code', copied: 'Copied', previous: 'Previous', next: 'Next', question: 'Case question', principle: 'Chapter principle', tags: 'Knowledge tags', control: 'Adjust the controls and observe the layout recalculate', reset: 'Reset', current: 'Current state', desktop: 'Desktop teaching site', d3: 'D3 visual model' }
 };
 
 let lang = localStorage.getItem('layout-lab-language') || 'zh';
+const originalTitle = document.title;
 let state = { boxSizing: 'border-box', padding: 24, border: 2, margin: 18, colorMode: 'balanced', typeScale: 1, spacing: 24, layout: 'grid', columns: 3, layer: 'sticky', z: 4, audit: 'clean' };
 const t = (value) => typeof value === 'string' ? value : value[lang];
 const root = document.body.dataset.root || (['chapter', 'section'].includes(document.body.dataset.page) ? '../' : './');
 const chapterId = Number(document.body.dataset.chapter || 0);
 const currentChapter = chapters.find((chapter) => chapter.id === chapterId);
+document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+if (lang === 'en') document.title = currentChapter ? `${ui.en.course} · ${t(currentChapter.title)}` : 'Layout with Intent · Introduction to Visualization';
 
 function esc(value) {
   return String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
@@ -121,7 +124,7 @@ function shell(content, activeId = 0, auxiliary = '') {
   return `<div class="site-frame">
     <header class="topbar">
       <a class="brand" href="${root}index.html"><img class="brand-logo" src="${root}assets/course-logo.png" alt=""><span><strong>${ui[lang].course}</strong><small>${ui[lang].title}</small></span></a>
-      <div class="topbar-actions"><button class="language-toggle" type="button" aria-label="Switch language">${lang === 'zh' ? 'EN' : '中文'}</button></div>
+      <div class="topbar-actions"><button class="language-toggle" type="button" aria-label="${lang === 'zh' ? '切换语言' : 'Switch language'}">${lang === 'zh' ? 'EN' : '中文'}</button></div>
     </header>
     <div class="body-frame ${auxiliary ? 'has-auxiliary' : activeId ? 'chapter-shell radial-nav-shell' : document.body.dataset.page === 'home' ? 'knowledge-home-shell' : ''}">
       <aside class="sidebar"><div class="sidebar-heading"><span>${ui[lang].home}</span><span class="live-dot"></span></div><div class="sidebar-meta">WEB LAYOUT · 7 CHAPTERS</div><nav>${nav}</nav><div class="sidebar-footer"><span class="sidebar-progress-title">${lang === 'zh' ? '学习进度' : 'Learning progress'}</span><div class="sidebar-progress-count"><strong>${String(activeId || 0).padStart(2, '0')}</strong><span>/ 07</span></div><div class="progress-track"><span style="width:${activeId ? Math.round((activeId / chapters.length) * 100) : 0}%"></span></div></div></aside>
@@ -147,27 +150,54 @@ function renderHome() {
 
 function renderHome() {
   const positions = [
-    [50, 10], [20, 29], [80, 29], [50, 50], [20, 72], [80, 72], [50, 91]
+    [17, 17], [47, 14], [76, 27], [62, 48], [29, 44], [20, 73], [59, 78]
   ];
   const subtitles = lang === 'zh'
     ? ['Layout awareness', 'Content relationships', 'Spatial constraints', 'Visual hierarchy', 'Structure building', 'Responsive layout', 'Integrated practice']
-    : ['布局认知', '内容关系', '空间约束', '视觉层级', '结构建立', '响应式布局', '综合实践'];
+    : ['Layout awareness', 'Content relationships', 'Spatial constraints', 'Visual hierarchy', 'Structure building', 'Responsive layout', 'Integrated practice'];
   const lastChapter = Math.min(7, Math.max(1, Number(localStorage.getItem('layout-lab-last-chapter') || 1)));
   const current = chapters[lastChapter - 1] || chapters[0];
   const completedCount = Math.max(0, lastChapter - 1);
   const statusLabel = (id) => id < lastChapter ? (lang === 'zh' ? '✓ 已完成' : '✓ Complete') : id === lastChapter ? (lang === 'zh' ? '● 学习中' : '● Current') : (lang === 'zh' ? '未开始' : 'Not started');
   const nodeClass = (id) => id < lastChapter ? 'is-complete' : id === lastChapter ? 'is-current' : 'is-upcoming';
   const nodes = chapters.map((chapter, index) => `<a class="knowledge-node node-kind-${chapter.id} ${nodeClass(chapter.id)}" data-node-id="${chapter.id}" href="./chapters/chapter-0${chapter.id}.html" style="--node-x:${positions[index][0]}%;--node-y:${positions[index][1]}%;--node-delay:${index * 70}ms" aria-label="${esc(t(chapter.title))}"><span class="knowledge-node-index">0${chapter.id}</span><strong>${esc(t(chapter.title))}</strong><small>${subtitles[index]}</small><em>${statusLabel(chapter.id)}</em><span class="node-glyph" aria-hidden="true"></span></a>`).join('');
-  const lines = [[1, 2], [1, 3], [2, 4], [3, 4], [4, 5], [4, 6], [5, 7], [6, 7]].map(([from, to]) => {
+  const lines = [[1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7]].map(([from, to]) => {
     const a = positions[from - 1]; const b = positions[to - 1];
     return `<path d="M ${a[0] * 10} ${a[1] * 7.2} C ${a[0] * 10} ${(a[1] + b[1]) * 3.6}, ${b[0] * 10} ${(a[1] + b[1]) * 3.6}, ${b[0] * 10} ${b[1] * 7.2}" data-edge="${from}-${to}" class="knowledge-edge is-primary ${to <= lastChapter ? 'is-complete' : ''} ${from < lastChapter && to <= lastChapter ? 'is-active-path' : ''}" />`;
   }).join('');
-  const secondaryLines = [[1, 4], [2, 5], [3, 6], [4, 7]].map(([from, to]) => {
+  const secondaryLines = [[1, 5], [2, 4], [3, 7], [5, 7]].map(([from, to]) => {
     const a = positions[from - 1]; const b = positions[to - 1];
     return `<path d="M ${a[0] * 10} ${a[1] * 7.2} C ${a[0] * 10} ${(a[1] + b[1]) * 3.6}, ${b[0] * 10} ${(a[1] + b[1]) * 3.6}, ${b[0] * 10} ${b[1] * 7.2}" data-edge="${from}-${to}" class="knowledge-edge is-secondary" />`;
   }).join('');
   const tags = current.tags[lang].slice(0, 4).map((tag) => `<span>${esc(tag)}</span>`).join('');
-  const content = `<article class="knowledge-home"><header class="knowledge-header"><div><span class="eyebrow">${lang === 'zh' ? 'COURSE MAP · 可视化导论' : 'COURSE MAP · Visual Introduction'}</span><h1>${lang === 'zh' ? '构页有方' : '构页有方'}</h1><p>${lang === 'zh' ? '从内容关系、空间约束与视觉层级出发，建立可复用的页面布局判断方法。' : 'Build reusable layout judgment from content relationships, spatial constraints, and visual hierarchy.'}</p></div><div class="knowledge-header-actions"><div><span>${lang === 'zh' ? 'COURSE PROGRESS' : 'COURSE PROGRESS'}</span><strong>${String(lastChapter).padStart(2, '0')} <i>/ 07</i></strong><span class="header-progress"><b style="width:${Math.round((lastChapter / chapters.length) * 100)}%"></b></span></div><a href="./chapters/chapter-0${lastChapter}.html">${lang === 'zh' ? '继续学习' : 'Continue'} <b>→</b></a></div></header><section class="knowledge-layout"><div class="knowledge-map-panel"><div class="knowledge-map-meta"><span>${lang === 'zh' ? '课程知识地图' : 'Course knowledge map'}</span><small>${lang === 'zh' ? '悬停探索关系 · 点击进入章节' : 'Hover to explore · Click to enter'}</small></div><div class="knowledge-map-stage"><div class="map-grid" aria-hidden="true"></div><div class="map-axis map-axis-x" aria-hidden="true"></div><div class="map-axis map-axis-y" aria-hidden="true"></div><svg class="knowledge-edges" viewBox="0 0 1000 720" preserveAspectRatio="none" aria-hidden="true">${lines}${secondaryLines}</svg><div class="knowledge-nodes">${nodes}</div><div class="knowledge-subsection-popover" id="knowledge-subsections" aria-hidden="true"></div></div><div class="learning-loop"><span>${lang === 'zh' ? 'LEARNING LOOP' : 'LEARNING LOOP'}</span><strong>01&nbsp; ${lang === 'zh' ? '观察' : 'Observe'}</strong><b></b><strong>02&nbsp; ${lang === 'zh' ? '建模' : 'Model'}</strong><b></b><strong>03&nbsp; ${lang === 'zh' ? '实现' : 'Build'}</strong><b></b><strong>04&nbsp; ${lang === 'zh' ? '验证' : 'Explore'}</strong></div></div><aside class="knowledge-detail" id="knowledge-detail"><div class="detail-status"><span>${lang === 'zh' ? 'CURRENT NODE · 当前节点' : 'CURRENT NODE'}</span><i></i></div><span class="detail-index">0${current.id}</span><h2>${esc(t(current.title))}</h2><p class="detail-subtitle">${subtitles[current.id - 1]}</p><p class="detail-summary">${esc(t(current.summary))}</p><div class="detail-label">${lang === 'zh' ? '本章学习' : 'IN THIS CHAPTER'}</div><div class="detail-tags">${tags}</div><div class="detail-stats"><span>${lang === 'zh' ? '5 个小节' : '5 Sections'}</span><span>${lang === 'zh' ? '约 32 min' : '32 min'}</span></div><a class="detail-action" href="./chapters/chapter-0${current.id}.html">${lastChapter > 1 ? (lang === 'zh' ? '继续本章' : 'Continue chapter') : (lang === 'zh' ? '进入第 1 章' : 'Enter chapter 1')} <b>→</b></a></aside></section></article>`;
+  const ambientParticles = Array.from({ length: 18 }, (_, index) => {
+    const x = (index * 37 + 9) % 96;
+    const y = (index * 53 + 12) % 92;
+    const size = 3 + (index % 4) * 1.5;
+    const duration = 15 + (index % 6) * 3;
+    const delay = -(index % 7) * 2.4;
+    return `<i style="--particle-x:${x}%;--particle-y:${y}%;--particle-size:${size}px;--particle-duration:${duration}s;--particle-delay:${delay}s"></i>`;
+  }).join('');
+  const content = `<div class="home-ambient-particles" aria-hidden="true">${ambientParticles}</div><article class="knowledge-home">
+    <header class="knowledge-header">
+      <div class="knowledge-heading">
+        <span class="eyebrow">${lang === 'zh' ? 'VISUAL INTRODUCTION · 可视化导论' : 'VISUAL INTRODUCTION · COURSE MAP'}</span>
+         <h1>${lang === 'zh' ? '构页有方' : 'Layout with Intent'}</h1>
+        <p>${lang === 'zh' ? '从内容关系、空间约束与视觉层级出发，探索一张页面如何逐步成立。' : 'Explore how a page takes shape through content relationships, spatial constraints, and visual hierarchy.'}</p>
+      </div>
+      <div class="knowledge-header-actions" aria-label="${lang === 'zh' ? '课程进度' : 'Course progress'}">
+        <div><span>COURSE PROGRESS</span><strong>${String(lastChapter).padStart(2, '0')} <i>/ 07</i></strong><span class="header-progress"><b style="width:${Math.round((lastChapter / chapters.length) * 100)}%"></b></span></div>
+      </div>
+    </header>
+    <section class="knowledge-layout">
+      <div class="knowledge-map-panel">
+        <div class="knowledge-map-meta"><span>${lang === 'zh' ? '课程知识地图' : 'Course knowledge map'}</span><small>${lang === 'zh' ? '悬停探索关系 · 点击进入章节' : 'Hover to explore · Click to enter'}</small></div>
+        <div class="knowledge-map-stage"><div class="map-grid" aria-hidden="true"></div><div class="map-axis map-axis-x" aria-hidden="true"></div><div class="map-axis map-axis-y" aria-hidden="true"></div><svg class="knowledge-edges" viewBox="0 0 1000 720" preserveAspectRatio="none" aria-hidden="true">${lines}${secondaryLines}</svg><div class="knowledge-nodes">${nodes}</div><div class="knowledge-subsection-popover" id="knowledge-subsections" aria-hidden="true"></div></div>
+        <div class="learning-loop"><span>LEARNING LOOP</span><strong>01&nbsp; ${lang === 'zh' ? '观察' : 'Observe'}</strong><b></b><strong>02&nbsp; ${lang === 'zh' ? '建模' : 'Model'}</strong><b></b><strong>03&nbsp; ${lang === 'zh' ? '实现' : 'Build'}</strong><b></b><strong>04&nbsp; ${lang === 'zh' ? '验证' : 'Explore'}</strong></div>
+      </div>
+      <aside class="knowledge-detail" id="knowledge-detail"><div class="detail-status"><span>${lang === 'zh' ? 'CURRENT FOCUS · 当前章节' : 'CURRENT FOCUS'}</span><i></i></div><span class="detail-index">0${current.id}</span><h2>${esc(t(current.title))}</h2><p class="detail-subtitle">${subtitles[current.id - 1]}</p><p class="detail-summary">${esc(t(current.summary))}</p><div class="detail-label">${lang === 'zh' ? '本章学习' : 'IN THIS CHAPTER'}</div><div class="detail-tags">${tags}</div><div class="detail-stats"><span>${lang === 'zh' ? '5 个小节' : '5 Sections'}</span><span>${lang === 'zh' ? '约 32 分钟' : '32 min'}</span></div><a class="detail-action" href="./chapters/chapter-0${current.id}.html">${lastChapter > 1 ? (lang === 'zh' ? '继续本章' : 'Continue chapter') : (lang === 'zh' ? '进入第 1 章' : 'Enter chapter 1')} <b>→</b></a></aside>
+    </section>
+  </article>`;
   document.querySelector('#app').innerHTML = shell(content, 0);
   document.body.classList.add('knowledge-home-page');
   bindGlobal();
@@ -215,7 +245,7 @@ function bindKnowledgeMap(defaultId) {
     nodes.forEach((item) => item.classList.toggle('is-dimmed', dim && item !== node));
     document.querySelectorAll('.knowledge-edge').forEach((edge) => { const related = dim && edge.dataset.edge.split('-').includes(String(id)); edge.classList.toggle('is-related', related); edge.classList.toggle('is-muted', dim && !related); });
     const subtitle = (lang === 'zh' ? ['布局认知', '内容关系', '空间约束', '视觉层级', '结构建立', '响应式布局', '综合实践'] : ['Layout awareness', 'Content relationships', 'Spatial constraints', 'Visual hierarchy', 'Structure building', 'Responsive layout', 'Integrated practice'])[chapter.id - 1];
-    detail.innerHTML = `<div class="detail-status"><span>${lang === 'zh' ? '当前节点' : 'Current node'}</span><i></i></div><span class="detail-index">0${chapter.id}</span><h2>${esc(t(chapter.title))}</h2><p class="detail-subtitle">${subtitle}</p><p class="detail-summary">${esc(t(chapter.summary))}</p><div class="detail-label">${lang === 'zh' ? '本章学习' : 'In this chapter'}</div><div class="detail-tags">${chapter.tags[lang].slice(0, 4).map((tag) => `<span>${esc(tag)}</span>`).join('')}</div><div class="detail-stats"><span>${lang === 'zh' ? '5 个小节' : '5 sections'}</span><span>${lang === 'zh' ? '约 32 min' : 'About 32 min'}</span></div><a class="detail-action" href="./chapters/chapter-0${chapter.id}.html">${chapter.id === defaultId ? (lang === 'zh' ? '继续本章' : 'Continue chapter') : (lang === 'zh' ? '进入本章' : 'Enter chapter')} <b>→</b></a>`;
+    detail.innerHTML = `<div class="detail-status"><span>${lang === 'zh' ? 'CURRENT FOCUS · 当前章节' : 'CURRENT FOCUS'}</span><i></i></div><span class="detail-index">0${chapter.id}</span><h2>${esc(t(chapter.title))}</h2><p class="detail-subtitle">${subtitle}</p><p class="detail-summary">${esc(t(chapter.summary))}</p><div class="detail-label">${lang === 'zh' ? '本章学习' : 'In this chapter'}</div><div class="detail-tags">${chapter.tags[lang].slice(0, 4).map((tag) => `<span>${esc(tag)}</span>`).join('')}</div><div class="detail-stats"><span>${lang === 'zh' ? '5 个小节' : '5 sections'}</span><span>${lang === 'zh' ? '约 32 分钟' : 'About 32 min'}</span></div><a class="detail-action" href="./chapters/chapter-0${chapter.id}.html">${chapter.id === defaultId ? (lang === 'zh' ? '继续本章' : 'Continue chapter') : (lang === 'zh' ? '进入本章' : 'Enter chapter')} <b>→</b></a>`;
   };
   nodes.forEach((node) => {
     node.addEventListener('mouseenter', () => { setFocus(node.dataset.nodeId); showSubsections(node.dataset.nodeId); });
@@ -318,7 +348,7 @@ const chapterOneSections = [
     title: { zh: '观察问题：布局不是摆放元素', en: 'Observe the problem: layout is not placement' },
     summary: { zh: '先从一个看起来很挤的页面开始，识别布局真正要解决的问题。', en: 'Start with a crowded-looking page and identify the problem layout actually needs to solve.' },
     explanation: { zh: ['布局不是把元素随意摆在画布上，而是建立一组空间关系：谁包含谁、谁优先被看到、哪些区域共享一条边线。', '浏览器不会像设计师一样“看懂”页面。它从 DOM 树出发，结合每个元素的布局规则，逐层计算可用空间、尺寸和位置。'], en: ['Layout is not placing elements freely on a canvas. It is a set of spatial relationships: containment, attention priority, and shared alignment edges.', 'A browser does not understand a page like a designer. It starts from the DOM tree and calculates available space, size, and position through layout rules.'] },
-    code: '<main class="course-page">\n  <header class="course-header">课程信息</header>\n  <div class="course-body">\n    <aside class="chapter-nav">章节导航</aside>\n    <section class="course-content">课程内容</section>\n  </div>\n</main>',
+    code: '.course-body {\n  display: grid;\n  grid-template-columns: 38% 1fr;\n  gap: 12px;\n}\n\n.course-content {\n  max-width: none;\n}',
     demo: 'tree',
     principle: { zh: '先回答内容之间是什么关系，再决定它们应该放在哪里。', en: 'First ask how the content is related; only then decide where it should go.' }
   },
@@ -327,7 +357,7 @@ const chapterOneSections = [
     title: { zh: '建立模型：四种空间关系', en: 'Build the model: four spatial relationships' },
     summary: { zh: '用包含、流动、对齐和优先四个维度，把视觉感受翻译成可讨论的结构问题。', en: 'Translate visual impressions into structural questions through containment, flow, alignment, and priority.' },
     explanation: { zh: ['父容器给子元素提供可用空间和定位参照；元素默认按照文档顺序占位；共享边线能够组织分散内容；尺寸、位置和留白共同形成视觉优先级。', '这四种关系比单独记忆 CSS 属性更重要，因为它们解释了页面为什么这样组织。'], en: ['A parent provides space and a positioning reference; elements occupy space in document order; shared edges organize separate content; size, position, and whitespace create priority.', 'These relationships matter more than memorizing individual CSS properties because they explain why a page is organized this way.'] },
-    code: '.course-page {\n  display: grid;\n  grid-template-columns: 240px minmax(0, 1fr);\n  gap: 32px;\n}\n\n.course-content {\n  min-width: 0;\n}',
+    code: '<main class="course-page">\n  <header class="course-header">课程信息</header>\n  <div class="course-body">\n    <aside class="chapter-nav">章节导航</aside>\n    <section class="course-content">学习内容</section>\n  </div>\n</main>',
     demo: 'layout',
     principle: { zh: '先判断空间关系，再选择布局工具。', en: 'Identify the spatial relationship before choosing the layout tool.' }
   },
@@ -345,7 +375,7 @@ const chapterOneSections = [
     title: { zh: 'DOM 结构如何变成页面空间', en: 'How DOM structure becomes page space' },
     summary: { zh: '观察 DOM 层级与页面区域之间的对应关系，理解浏览器如何计算布局。', en: 'Observe the correspondence between DOM hierarchy and page regions to understand browser layout calculation.' },
     explanation: { zh: ['DOM 不是内容的清单，它还决定了元素之间的包含关系、继承关系和布局参照。', '当页面结构能够解释视觉结构时，后续的 CSS 才会变得可维护、可验证。'], en: ['The DOM is not only a content list. It also defines containment, inheritance, and layout references.', 'When the DOM explains the visual structure, later CSS becomes maintainable and verifiable.'] },
-    code: '<main class="course-page">\n  <header class="course-header">课程信息</header>\n  <aside class="chapter-nav">章节导航</aside>\n  <section class="course-content">\n    <article class="chapter-card">课程内容</article>\n    <div class="demo-panel">动态演示</div>\n  </section>\n</main>',
+    code: '<div class="course-body">\n  <aside class="chapter-nav">章节导航</aside>\n  <main class="course-content">\n    <article class="chapter-card">课程内容</article>\n    <div class="demo-panel">动态演示</div>\n  </main>\n</div>\n\n.course-body {\n  display: grid;\n  grid-template-columns: 240px 1fr;\n}',
     demo: 'tree',
     principle: { zh: '页面的视觉秩序应该能被 DOM 结构解释。', en: 'The page’s visual order should be explainable by its DOM structure.' }
   },
@@ -354,7 +384,7 @@ const chapterOneSections = [
     title: { zh: '验证：让布局问题变得可观察', en: 'Verify: make layout problems observable' },
     summary: { zh: '通过动态演示调整布局参数，观察浏览器如何重新计算空间。', en: 'Adjust layout parameters in an interactive demo and observe how the browser recalculates space.' },
     explanation: { zh: ['理论不是停留在结论里。通过调整列数、间距和布局模型，可以把“感觉拥挤”变成可观察的变化。', '验证的目标不是追求唯一答案，而是确认每条布局规则都有清楚的空间职责。'], en: ['Theory should not stop at conclusions. Adjusting columns, gaps, and layout models turns “it feels crowded” into an observable change.', 'Verification is not about finding one correct answer; it is about confirming that every layout rule has a clear spatial responsibility.'] },
-    code: '.course-content {\n  display: grid;\n  grid-template-columns: repeat(3, minmax(0, 1fr));\n  gap: 24px;\n}\n\n@media (max-width: 900px) {\n  .course-content { grid-template-columns: 1fr; }\n}',
+    code: '/* Before */\n.course-body {\n  grid-template-columns: 38% 1fr;\n  gap: 12px;\n}\n\n/* After */\n.course-body {\n  grid-template-columns: 240px 1fr;\n  gap: 32px;\n}\n.course-content { max-width: 820px; }',
     demo: 'layout',
     principle: { zh: '用可观察的变化验证理论，而不是只凭感觉调整。', en: 'Validate theory through observable changes instead of adjusting by feeling.' }
   }
@@ -364,7 +394,7 @@ const chapterOverviewMeta = {
   1: {
     keyConcepts: {
       zh: [['内容关系', 'Content Relationships'], ['空间模型', 'Spatial Model'], ['页面骨架', 'Page Structure'], ['DOM 与页面空间', 'DOM & Page Space'], ['布局验证', 'Layout Validation']],
-      en: [['Content Relationships', '内容关系'], ['Spatial Model', '空间模型'], ['Page Structure', '页面骨架'], ['DOM & Page Space', 'DOM 与页面空间'], ['Layout Validation', '布局验证']]
+      en: [['Content Relationships', 'Content relationships'], ['Spatial Model', 'Spatial model'], ['Page Structure', 'Page structure'], ['DOM & Page Space', 'DOM & page space'], ['Layout Validation', 'Layout validation']]
     },
     outcomes: {
       zh: ['识别内容关系', '建立空间模型', '组织页面骨架', '理解 DOM 与视觉布局', '验证布局判断'],
@@ -376,32 +406,223 @@ const chapterOverviewMeta = {
 const chapterModel = {
   1: {
     zh: { title: '本章知识模型', subtitle: '从内容关系到页面空间，理解布局如何被建立', intro: '这一章不是在记 CSS 属性，而是在建立一套判断页面布局的方法。', stages: [['RELATION', '内容关系', '哪些内容应该属于一组，哪些内容应该保持距离。', 'Content Relationships'], ['MODEL', '空间模型', '将视觉感受转化为宽度、间距、对齐和流动关系。', 'Spatial Model'], ['STRUCTURE', '页面结构', '把内容关系组织成稳定的页面骨架。', 'Page Structure'], ['MAPPING', '布局映射', '理解 DOM 结构如何通过 CSS Layout 进入页面空间。', 'Layout Mapping'], ['VALIDATION', '验证反馈', '通过交互调整与对比，判断布局是否真正改善。', 'Validation Feedback']] },
-    en: { title: 'CHAPTER MODEL', subtitle: 'How layout emerges from content relationships', intro: 'This chapter builds a method for judging layout instead of memorizing CSS properties.', stages: [['RELATION', 'Content Relationships', 'Identify what belongs together and what should stay apart.', '内容关系'], ['MODEL', 'Spatial Model', 'Translate visual impressions into width, spacing, alignment, and flow.', '空间模型'], ['STRUCTURE', 'Page Structure', 'Organize content into a stable page skeleton.', '页面结构'], ['MAPPING', 'Layout Mapping', 'Understand how DOM structure enters page space through CSS Layout.', '布局映射'], ['VALIDATION', 'Validation Feedback', 'Use interaction and comparison to test whether layout improves.', '验证反馈']] }
+    en: { title: 'CHAPTER MODEL', subtitle: 'How layout emerges from content relationships', intro: 'This chapter builds a method for judging layout instead of memorizing CSS properties.', stages: [['RELATION', 'Content Relationships', 'Identify what belongs together and what should stay apart.', 'Content Relationships'], ['MODEL', 'Spatial Model', 'Translate visual impressions into width, spacing, alignment, and flow.', 'Spatial Model'], ['STRUCTURE', 'Page Structure', 'Organize content into a stable page skeleton.', 'Page Structure'], ['MAPPING', 'Layout Mapping', 'Understand how DOM structure enters page space through CSS Layout.', 'Layout Mapping'], ['VALIDATION', 'Validation Feedback', 'Use interaction and comparison to test whether layout improves.', 'Validation Feedback']] }
   }
 };
 
 const sectionTeaching = {
   1: {
-    zh: { explain: ['案例背景：课程主页同时放入课程信息、章节导航、正文和演示，所有内容都在争夺首屏空间。问题不在于元素太多，而在于它们没有被组织成清晰的关系。', '学习这一节时，先不要写 CSS。先把内容分成页面级信息、导航信息、学习内容和辅助演示四类，再观察它们各自应该占据什么空间。'], points: ['包含关系：谁是容器，谁属于容器？', '阅读关系：用户应该先看到什么，再看到什么？', '边界关系：哪些模块需要共享同一条对齐线？'], code: '这段结构把课程主页拆成一个主容器、一个头部、一个导航区和一个内容区。HTML 的层级先确定，CSS 才有稳定的布局参照。', checks: ['main 负责页面边界', 'aside 承载章节导航', 'section 承载当前学习内容'], demo: '点击右侧 DOM 节点，观察页面骨架中的对应区域如何高亮。重点观察：节点层级变化时，空间归属也会变化。', result: '结论：页面拥挤通常不是代码长度问题，而是内容关系没有被表达清楚。'},
-    en: { explain: ['Case background: the course homepage places course information, chapter navigation, body content, and demos in the same view. The problem is not simply the amount of content; it is the lack of clear relationships.', 'Do not write CSS first. Classify the content into page information, navigation, learning content, and supporting demos, then decide what space each group should occupy.'], points: ['Containment: which element owns which content?', 'Reading order: what should users see first and next?', 'Boundary: which modules should share an alignment edge?'], code: 'This structure separates the homepage into a main container, header, navigation area, and content area. HTML hierarchy comes first so CSS has a stable reference.', checks: ['main defines the page boundary', 'aside holds chapter navigation', 'section holds the current lesson'], demo: 'Click a DOM node on the right and watch the corresponding page region highlight. Notice how hierarchy changes spatial ownership.', result: 'Conclusion: a crowded page is usually a relationship problem, not a code-length problem.' }
+    zh: { explain: ['案例背景：课程主页同时放入课程信息、章节导航、正文和演示，所有内容都在争夺首屏空间。问题不在于元素太多，而在于它们没有被组织成清晰的关系。', '学习这一节时，先不要写 CSS。先把内容分成页面级信息、导航信息、学习内容和辅助演示四类，再观察它们各自应该占据什么空间。'], points: ['阅读宽度：一行文字是不是过长？', '间距：内容组之间有没有明确边界？', '比例：Sidebar 和 Main 谁更重要？', '层级：用户第一眼应该看到什么？'], code: '这段问题版本 CSS 让学生先看到关系失衡，再通过调整验证判断。', checks: ['正文宽度过长', '导航比例偏大', '区块间距偏小'], demo: '先调整 Content Width、Gap、Sidebar Ratio，再观察 Hierarchy 反馈。不要一次修改所有参数。', result: '结论：页面拥挤通常不是代码长度问题，而是内容关系没有被表达清楚。'},
+    en: { explain: ['Case background: the course homepage places course information, chapter navigation, body content, and demos in the same view. The problem is not simply the amount of content; it is the lack of clear relationships.', 'Do not write CSS first. Classify the content into page information, navigation, learning content, and supporting demos, then decide what space each group should occupy.'], points: ['Reading width: is one line too long?', 'Spacing: do content groups have boundaries?', 'Proportion: which matters more, Sidebar or Main?', 'Hierarchy: what should users see first?'], code: 'This problem-version CSS lets students see an imbalanced relationship first, then verify it through adjustment.', checks: ['body width is too wide', 'navigation ratio is too large', 'section gap is too tight'], demo: 'Adjust Content Width, Gap, and Sidebar Ratio, then observe the Hierarchy feedback. Change one parameter at a time.', result: 'Conclusion: a crowded page is usually a relationship problem, not a code-length problem.' }
   },
   2: {
-    zh: { explain: ['“包含、流动、对齐、优先”是观察布局的四个镜头。它们把模糊的视觉感受变成可以检查的结构问题。', '例如两个卡片看起来没有对齐，可能不是 margin 数值错误，而是它们没有共享同一个网格轨道；一个按钮被挤到下一行，可能是父容器没有分配足够的可用空间。'], points: ['包含：确定空间参照', '流动：尊重文档顺序', '对齐：建立共享边线', '优先：控制视觉重量'], code: 'Grid 在这里表达的是页面级的二维关系：左侧是固定导航，右侧是可以收缩的内容空间。minmax(0, 1fr) 能避免长内容把网格撑破。', checks: ['固定列表达稳定边界', '1fr 表达剩余空间', 'gap 表达模块之间的关系'], demo: '切换 Grid 和 Flexbox，并调整列数。观察一维排列与二维区域之间的差异。', result: '结论：先说清楚关系，再选择 Flex、Grid 或普通文档流。'},
-    en: { explain: ['Containment, flow, alignment, and priority are four lenses for reading layout. They turn vague visual impressions into structural questions that can be checked.', 'When two cards look misaligned, the cause may not be a wrong margin value. They may not share a grid track. When a button wraps, its parent may simply lack available space.'], points: ['Containment: define the spatial reference', 'Flow: respect document order', 'Alignment: establish shared edges', 'Priority: control visual weight'], code: 'Grid expresses a two-dimensional page relationship: a fixed navigation column and a flexible content column. minmax(0, 1fr) prevents long content from breaking the grid.', checks: ['fixed tracks express stable boundaries', '1fr expresses remaining space', 'gap expresses relationships between modules'], demo: 'Switch between Grid and Flexbox and adjust the column count. Compare one-dimensional arrangement with two-dimensional regions.', result: 'Conclusion: explain the relationship first, then choose normal flow, Flexbox, or Grid.' }
+    zh: { explain: ['“包含、流动、对齐、优先”是观察布局的四个镜头。它们把模糊的视觉感受变成可以检查的结构问题。', '例如两个卡片看起来没有对齐，可能不是 margin 数值错误，而是它们没有共享同一个网格轨道；一个按钮被挤到下一行，可能是父容器没有分配足够的可用空间。'], points: ['包含：确定空间参照', '流动：尊重文档顺序', '对齐：建立共享边线', '优先：控制视觉重量'], code: 'Grid 在这里表达的是页面级的二维关系：左侧是固定导航，右侧是可以收缩的内容空间。minmax(0, 1fr) 能避免长内容把网格撑破。', checks: ['固定列表达稳定边界', '1fr 表达剩余空间', 'gap 表达模块之间的关系'], demo: '分别切换包含关系、流动方向、对齐方式和视觉优先级，观察同一页面如何被重新组织。', result: '结论：先说清楚关系，再选择 Flex、Grid 或普通文档流。'},
+    en: { explain: ['Containment, flow, alignment, and priority are four lenses for reading layout. They turn vague visual impressions into structural questions that can be checked.', 'When two cards look misaligned, the cause may not be a wrong margin value. They may not share a grid track. When a button wraps, its parent may simply lack available space.'], points: ['Containment: define the spatial reference', 'Flow: respect document order', 'Alignment: establish shared edges', 'Priority: control visual weight'], code: 'Grid expresses a two-dimensional page relationship: a fixed navigation column and a flexible content column. minmax(0, 1fr) prevents long content from breaking the grid.', checks: ['fixed tracks express stable boundaries', '1fr expresses remaining space', 'gap expresses relationships between modules'], demo: 'Switch containment, flow direction, alignment, and priority. Observe how the same page is reorganized.', result: 'Conclusion: explain the relationship first, then choose normal flow, Flexbox, or Grid.' }
   },
   3: {
-    zh: { explain: ['页面骨架不是视觉稿的复制品，而是内容关系的空间翻译。盘点内容之后，必须继续判断哪些内容属于同一组、哪些内容是主信息。', '当页面区域被划分出来，后续的颜色、间距和组件样式才有明确作用对象。否则每一次调整都可能只是局部补丁。'], points: ['盘点：列出内容，不讨论样式', '建立关系：判断分组和优先级', '划分区域：为每组内容建立边界', '验证动线：从标题开始检查阅读顺序'], code: 'grid-template-areas 把内容关系直接写进 CSS。每个区域都有名字，代码阅读者可以快速理解页面骨架，而不必猜测第几个 grid-column。', checks: ['header 负责入口信息', 'nav 负责学习路径', 'content 负责主任务'], demo: '选择一个常见布局问题，观察演示给出的最小修复。对比“重新组织结构”和“继续加样式”的差异。', result: '结论：结构先成立，视觉层级才有可靠的基础。'},
-    en: { explain: ['A page skeleton is not a copy of a visual mockup. It is a spatial translation of content relationships. After inventorying content, decide what belongs together and what is primary.', 'Once regions are defined, colors, spacing, and component styles have clear targets. Otherwise each adjustment becomes a local patch.'], points: ['Inventory: list content without discussing style', 'Relate: decide grouping and priority', 'Zone: create boundaries for groups', 'Verify: check reading order from the heading'], code: 'grid-template-areas writes content relationships directly into CSS. Named regions make the skeleton readable without guessing column numbers.', checks: ['header owns entry information', 'nav owns the learning path', 'content owns the main task'], demo: 'Choose a common layout problem and observe the smallest repair. Compare reorganizing structure with adding more styling.', result: 'Conclusion: visual hierarchy becomes reliable only after structure works.' }
+    zh: { explain: ['页面骨架不是视觉稿的复制品，而是内容关系的空间翻译。盘点内容之后，必须继续判断哪些内容属于同一组、哪些内容是主信息。', '当页面区域被划分出来，后续的颜色、间距和组件样式才有明确作用对象。否则每一次调整都可能只是局部补丁。'], points: ['盘点：列出内容，不讨论样式', '建立关系：判断分组和优先级', '划分区域：为每组内容建立边界', '验证动线：从标题开始检查阅读顺序'], code: 'grid-template-areas 把内容关系直接写进 CSS。每个区域都有名字，代码阅读者可以快速理解页面骨架，而不必猜测第几个 grid-column。', checks: ['header 负责入口信息', 'nav 负责学习路径', 'content 负责主任务'], demo: '切换 Single、Sidebar、Two Column 和 Editorial，保持内容不变，只观察页面骨架与阅读路径的变化。', result: '结论：结构先成立，视觉层级才有可靠的基础。'},
+    en: { explain: ['A page skeleton is not a copy of a visual mockup. It is a spatial translation of content relationships. After inventorying content, decide what belongs together and what is primary.', 'Once regions are defined, colors, spacing, and component styles have clear targets. Otherwise each adjustment becomes a local patch.'], points: ['Inventory: list content without discussing style', 'Relate: decide grouping and priority', 'Zone: create boundaries for groups', 'Verify: check reading order from the heading'], code: 'grid-template-areas writes content relationships directly into CSS. Named regions make the skeleton readable without guessing column numbers.', checks: ['header owns entry information', 'nav owns the learning path', 'content owns the main task'], demo: 'Switch Single, Sidebar, Two Column, and Editorial while keeping content unchanged. Compare skeleton and reading path.', result: 'Conclusion: visual hierarchy becomes reliable only after structure works.' }
   },
   4: {
-    zh: { explain: ['DOM 树和页面空间之间存在一条重要映射：父节点通常提供边界，子节点在边界内部参与尺寸和位置计算。', '这也是为什么“套很多 div”不一定能解决布局问题。没有清楚的语义和空间职责，额外的包装层只会增加定位参照和调试成本。'], points: ['节点层级对应空间包含', '节点顺序影响默认流动', '节点角色帮助解释页面区域'], code: '这段代码让页面结构与视觉区域一一对应。article 是内容单元，demo-panel 是独立的验证单元，而不是把演示塞进正文段落里。', checks: ['结构可读', '区域职责单一', '演示与正文边界清楚'], demo: '点击 DOM 树中的 main、aside、section 和 article，查看它们在页面骨架中的角色说明。', result: '结论：能够被 DOM 解释的视觉秩序，才更容易维护。'},
-    en: { explain: ['There is a direct mapping between the DOM tree and page space: parents usually provide boundaries, while children are measured and positioned inside them.', 'That is why adding many divs does not automatically solve layout problems. Without clear roles, wrappers increase positioning references and debugging cost.'], points: ['node hierarchy maps to containment', 'node order affects normal flow', 'node roles explain page regions'], code: 'This structure maps DOM regions to visual regions. article is a content unit and demo-panel is an independent validation unit instead of being buried inside a paragraph.', checks: ['readable structure', 'single responsibility per region', 'clear boundary between content and demo'], demo: 'Click main, aside, section, and article in the DOM tree to inspect their roles in the page skeleton.', result: 'Conclusion: visual order is easier to maintain when the DOM can explain it.' }
+    zh: { explain: ['DOM 树和页面空间之间存在一条重要映射：父节点通常提供边界，子节点在边界内部参与尺寸和位置计算。', '这也是为什么“套很多 div”不一定能解决布局问题。没有清楚的语义和空间职责，额外的包装层只会增加定位参照和调试成本。'], points: ['节点层级对应空间包含', '节点顺序影响默认流动', '节点角色帮助解释页面区域'], code: '这段代码让页面结构与视觉区域一一对应。article 是内容单元，demo-panel 是独立的验证单元，而不是把演示塞进正文段落里。', checks: ['结构可读', '区域职责单一', '演示与正文边界清楚'], demo: '点击 DOM 节点或页面区域，再切换 Block、Flex、Grid，观察同一 DOM 如何形成不同空间。', result: '结论：能够被 DOM 解释的视觉秩序，才更容易维护。'},
+    en: { explain: ['There is a direct mapping between the DOM tree and page space: parents usually provide boundaries, while children are measured and positioned inside them.', 'That is why adding many divs does not automatically solve layout problems. Without clear roles, wrappers increase positioning references and debugging cost.'], points: ['node hierarchy maps to containment', 'node order affects normal flow', 'node roles explain page regions'], code: 'This structure maps DOM regions to visual regions. article is a content unit and demo-panel is an independent validation unit instead of being buried inside a paragraph.', checks: ['readable structure', 'single responsibility per region', 'clear boundary between content and demo'], demo: 'Click a DOM node or page region, then switch Block, Flex, and Grid to observe the same DOM form different spaces.', result: 'Conclusion: visual order is easier to maintain when the DOM can explain it.' }
   },
   5: {
-    zh: { explain: ['布局理论需要通过变化被验证。调整列数、间距和布局模型时，页面会暴露出哪些内容是主信息、哪些空间是可压缩的。', '验证不是把页面调到唯一的“正确答案”，而是检查：在不同空间约束下，页面仍然能保持清晰的关系和阅读顺序。'], points: ['改变参数，观察空间如何重新分配', '比较布局模型，而不是只看最终外观', '记录每条规则解决了什么问题'], code: '响应式规则不是单独的“手机样式”，而是对空间约束的验证。当内容宽度不足时，列数减少，页面关系仍然保持可读。', checks: ['内容列可以收缩', '间距有明确的节奏', '窄屏状态仍有清晰主次'], demo: '调整列数和布局模型，观察卡片如何重新分配空间。注意页面结构是否仍然保持稳定。', result: '结论：用可观察的变化验证理论，而不是只凭感觉调整。'},
-    en: { explain: ['Layout theory needs to be tested through change. When columns, gaps, and layout models change, the page reveals what is primary and what space can be compressed.', 'Verification is not about finding one perfect answer. It checks whether relationships and reading order remain clear under different spatial constraints.'], points: ['change parameters and observe redistribution', 'compare layout models, not only final appearance', 'record which problem each rule solves'], code: 'Responsive rules are tests of spatial constraints, not a separate mobile decoration layer. When width is limited, the column count changes while the relationships remain readable.', checks: ['content columns can shrink', 'spacing follows a rhythm', 'narrow states preserve hierarchy'], demo: 'Adjust the column count and layout model and observe how cards redistribute space. Check whether structure remains stable.', result: 'Conclusion: validate theory through observable changes instead of adjusting by feeling.' }
+    zh: { explain: ['布局理论需要通过变化被验证。调整列数、间距和布局模型时，页面会暴露出哪些内容是主信息、哪些空间是可压缩的。', '验证不是把页面调到唯一的“正确答案”，而是检查：在不同空间约束下，页面仍然能保持清晰的关系和阅读顺序。'], points: ['改变参数，观察空间如何重新分配', '比较布局模型，而不是只看最终外观', '记录每条规则解决了什么问题'], code: '响应式规则不是单独的“手机样式”，而是对空间约束的验证。当内容宽度不足时，列数减少，页面关系仍然保持可读。', checks: ['内容列可以收缩', '间距有明确的节奏', '窄屏状态仍有清晰主次'], demo: '在 Original / Current 之间切换，只调整阅读宽度、Gap、Alignment 和 Density，观察四项反馈。', result: '结论：用可观察的变化验证理论，而不是只凭感觉调整。'},
+    en: { explain: ['Layout theory needs to be tested through change. When columns, gaps, and layout models change, the page reveals what is primary and what space can be compressed.', 'Verification is not about finding one perfect answer. It checks whether relationships and reading order remain clear under different spatial constraints.'], points: ['change parameters and observe redistribution', 'compare layout models, not only final appearance', 'record which problem each rule solves'], code: 'Responsive rules are tests of spatial constraints, not a separate mobile decoration layer. When width is limited, the column count changes while the relationships remain readable.', checks: ['content columns can shrink', 'spacing follows a rhythm', 'narrow states preserve hierarchy'], demo: 'Switch Original / Current. Adjust only reading width, gap, alignment, and density, then inspect the four feedback signals.', result: 'Conclusion: validate theory through observable changes instead of adjusting by feeling.' }
   }
 };
+
+const chapterLessonContent = {
+  1: {
+    zh: { problem: '同一个课程学习页面同时放入课程信息、章节导航、正文、学习卡片和演示区。代码并不长，但正文过宽、侧栏过重、区块间距过小，用户很难判断先看什么。', why: '“拥挤”不等于元素太多。阅读宽度、间距、比例、对齐和层级共同决定了页面的负担；颜色和装饰只能改变表面，不能修复关系。', principle: '先观察哪里不舒服，再判断是哪一种空间关系出了问题。', model: ['Reading Width · 一行文字是否过长', 'Spacing · 内容组之间是否有边界', 'Proportion · Sidebar 与 Main 的面积是否符合职责', 'Hierarchy · 第一眼看到的是否真的是主任务'], example: '案例诊断：Sidebar 占 38%，正文 max-width 没有限制，Section Gap 只有 12px。导航获得了接近主内容的视觉重量，长行文字和紧密区块又把页面压成一片。', mistakes: ['页面挤了就统一缩小字体：这只会降低可读性，没有改变空间关系。', '页面乱了就给所有模块加卡片：边框增加了视觉噪声，不能代替分组。', '内容多就无脑增加页面宽度：更大的画布可能让阅读行更长。'], tryIt: '找出当前案例中最明显的 3 个问题，并分别标记为阅读宽度、间距、比例或层级。再只调整一个参数，观察 Before / Current 的变化。', takeaway: '先看页面哪里不舒服，再问是哪一种关系出了问题。', next: '现在我们已经能看出问题，下一节把这些感觉转化成可以描述的空间模型。', codeWhy: '这段问题版本 CSS 完全合法，但 38% 的导航比例、12px 的间距和不受限的正文宽度共同表达了不合理关系。浏览器会执行规则，却不会替你判断视觉职责。' },
+    en: { problem: 'The same course page places course information, chapter navigation, body content, learning cards, and a demo in one view. The code is short, but a wide body, dominant sidebar, and tight section gaps make the reading path unclear.', why: 'Crowding does not simply mean too many elements. Reading width, spacing, proportion, alignment, and hierarchy create the burden; color and decoration cannot repair those relationships.', principle: 'First notice what feels uncomfortable, then identify which spatial relationship is responsible.', model: ['Reading Width · Is one line too long?', 'Spacing · Do content groups have boundaries?', 'Proportion · Do Sidebar and Main reflect their roles?', 'Hierarchy · Is the first thing seen the main task?'], example: 'Case diagnosis: the Sidebar takes 38%, the body has no max-width, and Section Gap is only 12px. Navigation gains too much visual weight while long lines and tight groups flatten the page.', mistakes: ['Shrink every font when the page feels crowded: readability drops while the relationship stays the same.', 'Add a card around every module when the page feels messy: borders add noise instead of grouping.', 'Make the page wider whenever there is more content: a larger canvas can create longer reading lines.'], tryIt: 'Find the three clearest problems in the case and label them as reading width, spacing, proportion, or hierarchy. Change one parameter at a time and compare Before / Current.', takeaway: 'Notice what feels wrong first, then ask which relationship caused it.', next: 'Now that we can see the problem, the next section turns the feeling into a spatial model.', codeWhy: 'This problem CSS is valid, but 38% navigation, a 12px gap, and unrestricted body width express poor relationships together. The browser executes rules; it does not judge visual responsibility.' }
+  },
+  2: {
+    zh: { problem: '上一节看到了正文太宽、侧栏太重、区块太挤，但“太重”还不是可执行的描述。本节要把感觉拆成四种关系。', why: '页面稳定性来自关系：父节点提供参照，文档顺序形成流动，共享边界产生对齐，空间占比表达优先级。', principle: '把页面看成关系系统，而不是盒子集合。', model: ['Containment · course-body 包含 sidebar 与 main', 'Flow · 内容按文档顺序参与布局', 'Alignment · 标题、正文和 Demo 共享边界', 'Priority · Main 比辅助导航拥有更高空间权重'], example: '在同一个课程页面中，course-page 包含 header 与 body；body 的 sidebar 和 main 是兄弟关系；main 内部再按 Intro → Content → Demo 流动。', mistakes: ['为了视觉效果随意改变 DOM 层级：短期看似对齐，长期失去空间参照。', '大量使用 absolute positioning：把流动关系变成坐标补丁。', '只看元素本身，不看父子关系：局部 margin 无法解释整页空间。', '所有区域使用同样的视觉重量：页面失去主次。'], tryIt: '把案例中的元素逐一判断为包含、流动、对齐或优先关系；再切换布局方式，观察同一组内容为什么会得到不同空间。', takeaway: '先说清楚关系，再选择普通流、Flex 或 Grid。', next: '关系已经明确，下一节要把它们组织成可以承载内容的页面骨架。', codeWhy: 'aside 和 section 作为 course-body 的兄弟元素，正好表达“导航与主内容并列”；240px 与 1fr 则把稳定边界和剩余空间写成可读的关系。' },
+    en: { problem: 'The previous section revealed a wide body, a dominant sidebar, and tight groups, but “too heavy” is not yet an executable description. This section breaks the feeling into four relationships.', why: 'Stable pages come from relationships: parents provide references, document order creates flow, shared edges create alignment, and space expresses priority.', principle: 'Read the page as a relationship system, not a collection of boxes.', model: ['Containment · course-body contains sidebar and main', 'Flow · content participates in document order', 'Alignment · heading, body, and demo share edges', 'Priority · Main receives more space than supporting navigation'], example: 'In the same course page, course-page contains header and body; body has sibling sidebar and main; main then flows Intro → Content → Demo.', mistakes: ['Changing DOM hierarchy only for appearance: the page loses a stable reference.', 'Using lots of absolute positioning: flow becomes coordinate patches.', 'Inspecting elements without parents and children: local margins cannot explain the page.', 'Giving every region equal weight: hierarchy disappears.'], tryIt: 'Classify each case element as containment, flow, alignment, or priority. Then switch layout modes and compare the resulting space.', takeaway: 'Explain the relationship first, then choose normal flow, Flexbox, or Grid.', next: 'With relationships clear, the next section organizes them into a page skeleton.', codeWhy: 'Making aside and section siblings inside course-body expresses navigation and content as parallel responsibilities. 240px and 1fr turn a stable edge plus remaining space into a readable rule.' }
+  },
+  3: {
+    zh: { problem: '现在已经知道内容之间的关系，但仍要决定课程标题、导航、正文、代码、示例和总结如何分区。相同内容可以有多种骨架。', why: '页面骨架是内容结构的空间翻译。先盘点内容，再分组、排序、划区，最后验证动线，能避免用装饰补救结构。', principle: '页面骨架不是装饰，而是内容关系的空间表达。', model: ['Global · Header 与课程级信息', 'Navigation · Sidebar 与学习路径', 'Primary · Main 与连续阅读任务', 'Interactive · Demo 作为正文中的辅助验证'], example: '当前案例选择 Sidebar Layout：导航持续可见但不应成为视觉中心；正文拥有连续阅读空间；Demo 嵌入 Main，而不是独立抢占第三栏。', mistakes: ['所有页面都套三栏：结构没有从内容职责出发。', '只凭“好不好看”决定骨架：短期漂亮，阅读动线可能断裂。', 'Sidebar 与 Main 平分空间：辅助职责获得了不合理权重。', '把 Demo 独立成第三栏：主内容反而被压窄。'], tryIt: '让同一组内容依次尝试 Single、Sidebar、Two Column、Editorial 和 Dashboard 五种骨架，只观察阅读路径和区域职责。', takeaway: '内容没变，骨架改变后阅读体验会变；因此结构必须先于装饰。', next: '下一节继续追问：这些页面区域在 DOM 中如何表达，并如何进入二维空间。', codeWhy: '命名的 grid-template-areas 把 header、nav、content 的职责直接写出来。240px + 1fr 让 Sidebar 保持稳定边界，同时把主要空间留给 Main。' },
+    en: { problem: 'The relationships are clear, but the course title, navigation, body, code, examples, and summary still need regions. The same content can take several skeletons.', why: 'A page skeleton translates content structure into space. Inventory, group, order, zone, then verify the path instead of patching structure with decoration.', principle: 'A page skeleton is the spatial expression of content relationships, not decoration.', model: ['Global · Header and course-level information', 'Navigation · Sidebar and learning path', 'Primary · Main and continuous reading task', 'Interactive · Demo as supporting verification inside Main'], example: 'The case uses a Sidebar Layout: navigation stays available without becoming the visual center; the body keeps a continuous reading space; Demo stays inside Main instead of taking a third column.', mistakes: ['Using three columns everywhere: the skeleton ignores content responsibility.', 'Choosing structure only by appearance: a pretty result can still break the reading path.', 'Giving Sidebar and Main equal width: supporting content gets too much weight.', 'Making Demo a third column: the main reading area becomes too narrow.'], tryIt: 'Try the same content in Single, Sidebar, Two Column, Editorial, and Dashboard skeletons. Compare only path and responsibility.', takeaway: 'The content can stay the same while the skeleton changes the reading experience, so structure comes before decoration.', next: 'Next we ask how these visual regions are expressed in the DOM and enter page space.', codeWhy: 'Named grid-template-areas writes the responsibilities of header, nav, and content into CSS. 240px plus 1fr preserves a stable navigation edge while giving the main task the remaining space.' }
+  },
+  4: {
+    zh: { problem: 'HTML 只有层级关系，浏览器却要把它变成二维页面。为什么 aside 会在左边，main 会在右边？HTML 本身并不知道。', why: 'DOM 定义父子、兄弟和顺序；父容器的 display 决定直接子元素进入哪一种布局上下文，CSS 再计算尺寸、轨道和位置。', principle: 'DOM 描述谁和谁有关系，CSS 决定这些关系如何进入页面空间。', model: ['Parent / Child · course-body 是 aside 与 main 的父节点', 'Sibling · aside 与 main 参与同一布局上下文', 'Display · block、flex、grid 组织直接子元素', 'Mapping · DOM 节点应能解释页面区域'], example: '同一组 aside + main，在 block 中上下排列，在 flex 中形成一维并列，在 grid 中可以使用 240px | 1fr 的二维轨道。', mistakes: ['把 DOM 顺序和视觉位置当成同一件事：CSS 可以改变布局方向。', '用 margin 强行推元素：空间职责变成脆弱补丁。', '为了左右布局使用 absolute：脱离正常流动。', '不理解父容器 display 却一直修改子元素：参照上下文始终没有解决。'], tryIt: '先点击 DOM Tree 中的 aside、main 和 article，再依次切换 block、flex、grid，预测并验证页面区域如何变化。', takeaway: '能被 DOM 解释的视觉秩序，才更容易维护和验证。', next: '最后一节将把这些空间变化放进 Before / Current 对比中，验证判断是否成立。', codeWhy: 'HTML 先定义 course-body、aside 和 main 的关系，display:grid 再把同层兄弟元素放进二维布局上下文。结构和空间各自承担清楚职责。' },
+    en: { problem: 'HTML gives us hierarchy, but the browser must turn it into a two-dimensional page. Why does aside appear left and main right? HTML alone does not know.', why: 'The DOM defines parents, children, siblings, and order. The parent display chooses a layout context, and CSS calculates size, tracks, and position inside it.', principle: 'The DOM describes relationships; CSS decides how those relationships enter page space.', model: ['Parent / Child · course-body parents aside and main', 'Sibling · aside and main share a layout context', 'Display · block, flex, and grid organize direct children', 'Mapping · DOM nodes should explain page regions'], example: 'The same aside + main stack in block, align in one dimension with flex, and form 240px | 1fr tracks with grid.', mistakes: ['Treating DOM order and visual position as identical: CSS can change direction.', 'Pushing elements with margin: responsibilities become fragile patches.', 'Using absolute positioning for columns: normal flow is lost.', 'Changing children without understanding the parent display: the reference context stays wrong.'], tryIt: 'Click aside, main, and article in the DOM Tree. Switch block, flex, and grid, then predict and verify the region changes.', takeaway: 'Visual order is easier to maintain and verify when the DOM can explain it.', next: 'The final section places these changes into Before / Current comparison to test the judgment.', codeWhy: 'HTML first defines the relationship among course-body, aside, and main. display:grid then places the sibling elements into a two-dimensional context, keeping structure and space distinct.' }
+  },
+  5: {
+    zh: { problem: '“我觉得这个版本更好”还不够。需要同时比较正文行长、间距、对齐、层级和密度，确认变化是否真的改善了阅读路径。', why: '验证不是寻找唯一答案，而是在不同空间约束下检查关系是否仍然清楚，并能解释每个变化解决了什么问题。', principle: '好的布局判断，应该能通过变化解释，而不是只靠感觉。', model: ['Reading Width · Too Narrow / Comfortable / Too Wide', 'Spacing · 同组靠近，不同组有边界', 'Alignment · 标题、正文、卡片共享稳定边界', 'Hierarchy · 主任务先被看到', 'Density · 信息分组降低负担，而非简单减少内容'], example: '案例可以从 Sidebar 38%、Content 1180px、Section Gap 12px 调整为约 24%、820px、32px，再比较阅读路径、留白和主次是否改善。', mistakes: ['只看是不是更漂亮：审美不能替代空间证据。', '一次改很多东西：无法知道哪个变化有效。', '只看单个组件：局部改善可能损害整页关系。', '只在一个屏幕宽度验证：布局可能只在当前视口成立。'], tryIt: '先记录 Before，再一次只改一个参数，观察 Reading Width、Spacing、Alignment、Hierarchy 和 Density 的反馈，最后查看 Current。', takeaway: '用可观察的变化验证理论，而不是只凭感觉调整。', next: '完成验证后，回到第一节重新观察，你已经拥有了一套可迁移的布局判断方法。', codeWhy: 'Before 与 After 同时调整列比例、gap 和 content max-width，不是某一个属性拯救页面，而是多种关系一起变得合理。' },
+    en: { problem: '“This version feels better” is not enough. Compare reading width, spacing, alignment, hierarchy, and density to confirm the reading path actually improved.', why: 'Validation does not search for one answer. It checks whether relationships stay clear under constraints and whether each change has an explainable purpose.', principle: 'A good layout judgment explains change instead of relying on feeling.', model: ['Reading Width · Too Narrow / Comfortable / Too Wide', 'Spacing · groups stay close while sections gain boundaries', 'Alignment · heading, body, and cards share stable edges', 'Hierarchy · the primary task is seen first', 'Density · grouping lowers burden without simply removing content'], example: 'The case can move from Sidebar 38%, Content 1180px, Section Gap 12px toward about 24%, 820px, and 32px, then compare path, whitespace, and hierarchy.', mistakes: ['Judging only whether it looks prettier: taste is not spatial evidence.', 'Changing everything at once: the useful cause becomes unclear.', 'Inspecting one component only: local improvement can damage the page.', 'Validating at one viewport only: the layout may work only at that width.'], tryIt: 'Record Before, change one parameter at a time, observe Reading Width, Spacing, Alignment, Hierarchy, and Density, then inspect Current.', takeaway: 'Validate theory through observable changes instead of adjusting by feeling.', next: 'After validation, return to the first section. You now have a transferable method for judging layout.', codeWhy: 'Before and After change ratio, gap, and content max-width together. No single property saves the page; several relationships become reasonable at once.' }
+  }
+};
+
+const quizQuestion = (questionZh, questionEn, optionsZh, optionsEn, answer, explanationZh, explanationEn) => ({
+  question: { zh: questionZh, en: questionEn },
+  options: { zh: optionsZh, en: optionsEn },
+  answer,
+  explanation: { zh: explanationZh, en: explanationEn }
+});
+
+const sectionQuizMap = {
+  1: {
+    title: { zh: '观察问题', en: 'Observe the problem' },
+    questions: [
+      quizQuestion('布局问题首先应该判断什么？', 'What should you identify first in a layout problem?', ['颜色是否足够丰富', '内容之间的空间关系', '阴影是否足够明显', '每个元素的固定宽度'], ['Whether the colors are rich enough', 'The spatial relationships between content', 'Whether the shadows are visible enough', 'A fixed width for every element'], 1, '布局首先要解释谁包含谁、谁先被看到，以及哪些区域应该对齐。', 'Layout should first explain containment, reading priority, and shared alignment.'),
+      quizQuestion('为什么章节导航适合成为独立的 aside 区域？', 'Why is chapter navigation a good fit for its own aside region?', ['它需要与正文争夺同一层级的注意力', '它承担独立的导航职责', '它必须脱离 DOM 结构', '它只能使用绝对定位'], ['It should compete with the body at the same level', 'It has an independent navigation responsibility', 'It must leave the DOM structure', 'It can only use absolute positioning'], 1, '导航与学习内容职责不同，独立语义区域能让空间关系更清楚。', 'Navigation and learning content have different responsibilities, so a semantic region clarifies their spatial relationship.'),
+      quizQuestion('浏览器理解页面时主要从哪里开始？', 'Where does the browser primarily start when it interprets a page?', ['设计稿中的视觉意图', '用户的阅读习惯', 'DOM 结构和 CSS 规则', '页面中的图片内容'], ['The visual intent in a design mockup', 'The user’s reading habits', 'The DOM structure and CSS rules', 'The images on the page'], 2, '浏览器从 DOM 和 CSS 出发，逐层计算可用空间、尺寸与位置。', 'The browser starts from the DOM and CSS, then calculates space, size, and position layer by layer.'),
+      quizQuestion('页面阅读顺序主要帮助我们判断什么？', 'What does reading order help us determine?', ['用户先看到什么，再看到什么', '所有区域是否使用同一种颜色', '代码是否足够短', '每个节点是否都有动画'], ['What the user sees first and next', 'Whether every region uses the same color', 'Whether the code is short enough', 'Whether every node has animation'], 0, '阅读顺序把内容重要性转化为视觉层级，避免所有区域同时争夺注意力。', 'Reading order translates content importance into visual hierarchy so every region does not compete equally.'),
+      quizQuestion('一个页面看起来很挤，最可能首先要检查什么？', 'When a page feels crowded, what should you check first?', ['是否需要更多装饰', '是否需要更多动画', '内容关系是否表达清楚', '是否应该把字体变得更小'], ['Whether it needs more decoration', 'Whether it needs more animation', 'Whether the content relationships are clear', 'Whether the type should be smaller'], 2, '拥挤通常首先是关系和层级问题，而不是装饰数量问题。', 'Crowding is usually first a problem of relationships and hierarchy, not a lack of decoration.' )
+    ]
+  },
+  2: {
+    title: { zh: '建立模型', en: 'Build the model' },
+    questions: [
+      quizQuestion('本节用哪四种关系观察布局？', 'Which four relationships does this section use to read layout?', ['颜色、阴影、圆角、动画', '包含、流动、对齐、优先', '标题、正文、按钮、图片', '宽度、高度、旋转、透明度'], ['Color, shadow, radius, animation', 'Containment, flow, alignment, priority', 'Heading, body, button, image', 'Width, height, rotation, opacity'], 1, '这四种关系把模糊的视觉感受转化成可以检查的结构问题。', 'These four relationships turn vague visual impressions into structural questions that can be checked.'),
+      quizQuestion('为什么 Grid 中常用 minmax(0, 1fr)？', 'Why is minmax(0, 1fr) often used in a Grid track?', ['让内容永远不能换行', '避免长内容把可收缩轨道撑破', '让所有列都变成固定宽度', '取消网格之间的间距'], ['To prevent content from wrapping', 'To keep long content from breaking a flexible track', 'To make every column fixed-width', 'To remove the gap between tracks'], 1, '0 允许轨道在需要时收缩，1fr 再分配剩余空间。', 'The 0 lets the track shrink when needed, while 1fr distributes remaining space.'),
+      quizQuestion('两个卡片看起来没有对齐，除了检查 margin，还应检查什么？', 'When two cards look misaligned, what should you inspect besides margin?', ['它们是否共享同一个网格轨道', '它们是否都使用动画', '它们的文字是否足够长', '它们是否都设置了 z-index'], ['Whether they share the same grid track', 'Whether they both use animation', 'Whether their text is long enough', 'Whether they both have z-index'], 0, '对齐往往来自共享的轨道或边界，而不只是某一个元素的 margin。', 'Alignment often comes from shared tracks or edges, not only from one element’s margin.'),
+      quizQuestion('什么时候更适合用 Grid？', 'When is Grid usually the better fit?', ['组织单条工具栏中的几个按钮', '建立行列同时存在的页面区域关系', '给一个元素添加阴影', '控制文字颜色'], ['Arranging a few buttons in one toolbar row', 'Building page regions with both rows and columns', 'Adding a shadow to an element', 'Controlling text color'], 1, 'Grid 适合表达二维页面地图，Flexbox 更常用于一维排列。', 'Grid expresses a two-dimensional page map, while Flexbox is often used for one-dimensional arrangement.'),
+      quizQuestion('gap 在页面模型中主要表达什么？', 'What does gap mainly express in a page model?', ['模块之间的空间关系', '元素的语义标签', '浏览器的加载顺序', '图片的压缩质量'], ['The spatial relationship between modules', 'The semantic tag of an element', 'The browser loading order', 'The compression quality of an image'], 0, 'gap 不是装饰参数，它把并列模块之间的距离关系明确写出来。', 'gap is not decoration; it makes the distance relationship between sibling modules explicit.' )
+    ]
+  },
+  3: {
+    title: { zh: '页面骨架', en: 'Page skeleton' },
+    questions: [
+      quizQuestion('从内容到页面骨架的推荐顺序是什么？', 'What is the recommended order from content to page skeleton?', ['先调颜色，再加动画，最后写 DOM', '盘点内容、建立关系、划分区域、验证动线', '先固定所有宽度，再删除内容', '先做阴影，再决定谁属于谁'], ['Tune color, add animation, then write the DOM', 'Inventory content, establish relationships, divide regions, verify the path', 'Fix every width, then remove content', 'Add shadows, then decide ownership'], 1, '固定顺序能让结构先成立，再把关系翻译成页面区域。', 'A fixed sequence lets structure work first, then translates relationships into page regions.'),
+      quizQuestion('为什么要先盘点内容？', 'Why should you inventory content first?', ['为了让页面立刻更有装饰', '为了确认页面有哪些职责和信息类型', '为了避免使用语义标签', '为了把所有内容放进一个盒子'], ['To decorate the page immediately', 'To identify the page’s responsibilities and information types', 'To avoid semantic tags', 'To put everything in one box'], 1, '只有知道页面承载什么内容，才能判断它们应该如何分组与分区。', 'Only after identifying the content can you decide how it should be grouped and zoned.'),
+      quizQuestion('“结构先成立”意味着什么？', 'What does “structure must work first” mean?', ['先确定关系和区域，再处理视觉层级', '完全不需要 CSS', '所有元素都必须使用 Grid', '页面必须只有黑白两色'], ['Establish relationships and regions before visual hierarchy', 'CSS is not needed at all', 'Every element must use Grid', 'The page must use only black and white'], 0, '视觉层级需要可靠的结构作为参照，不能用装饰替代页面骨架。', 'Visual hierarchy needs a reliable structural reference; decoration cannot replace the page skeleton.'),
+      quizQuestion('为什么要单独验证阅读动线？', 'Why should you verify the reading path separately?', ['确认视线顺序是否与内容重要性一致', '确认每个按钮都有动画', '确认代码行数最少', '确认所有区域一样宽'], ['To confirm the reading order matches content importance', 'To ensure every button has animation', 'To minimize line count', 'To make every region the same width'], 0, '动线验证检查的是视觉优先级是否真正传达了内容层级。', 'Path verification checks whether visual priority actually communicates content hierarchy.'),
+      quizQuestion('页面骨架最不应该由什么主导？', 'What should least determine the page skeleton?', ['内容关系', '区域职责', '阅读顺序', '孤立的装饰效果'], ['Content relationships', 'Regional responsibilities', 'Reading order', 'Isolated decorative effects'], 3, '骨架应由内容和空间关系主导，装饰只能在结构成立后辅助表达。', 'The skeleton should be driven by content and spatial relationships; decoration supports it only after structure works.' )
+    ]
+  },
+  4: {
+    title: { zh: 'DOM 与页面空间', en: 'DOM & page space' },
+    questions: [
+      quizQuestion('DOM 结构除了内容清单，还决定什么？', 'Besides listing content, what does the DOM structure determine?', ['包含关系、继承关系和布局参照', '屏幕的物理亮度', '图片的文件大小', '用户的网络速度'], ['Containment, inheritance, and layout references', 'The physical brightness of the screen', 'The file size of an image', 'The user’s network speed'], 0, 'DOM 层级会影响元素属于谁、继承什么，以及以谁作为布局参照。', 'DOM hierarchy affects ownership, inheritance, and the reference frame for layout.'),
+      quizQuestion('在示例结构中，article 更像什么？', 'In the example structure, what is article most like?', ['一个完整的内容单元', '页面级导航容器', '全局顶栏', '浮在页面上的提示层'], ['A complete content unit', 'A page-level navigation container', 'A global top bar', 'A tooltip floating above the page'], 0, 'article 把一个完整内容单元保持在同一语义边界内。', 'article keeps one complete content unit inside the same semantic boundary.'),
+      quizQuestion('为什么页面视觉结构应该能被 DOM 解释？', 'Why should the visual structure be explainable by the DOM?', ['这样 CSS 更容易维护和验证', '这样就不需要任何布局规则', '这样所有元素会自动居中', '这样浏览器不再计算尺寸'], 0, '当 DOM 与视觉区域对应时，CSS 规则会有稳定的结构参照。', 'When DOM and visual regions correspond, CSS rules have a stable structural reference.'),
+      quizQuestion('哪个关系最直接体现“谁包含谁”？', 'Which relationship most directly expresses “who contains whom”?', ['包含关系', '颜色关系', '阴影关系', '动画关系'], 0, '包含关系对应 DOM 的父子层级，也决定空间归属。', 'Containment maps to DOM parent-child hierarchy and determines spatial ownership.'),
+      quizQuestion('当 DOM 层级变化时，最可能随之变化的是什么？', 'What is most likely to change when the DOM hierarchy changes?', ['空间归属和布局参照', '浏览器地址栏文字', '图片压缩率', '字体文件格式'], 0, '层级变化会改变父子关系，进而改变可用空间与布局参照。', 'A hierarchy change alters parent-child relationships, which can change available space and layout references.' )
+    ]
+  },
+  5: {
+    title: { zh: '验证', en: 'Validate' },
+    questions: [
+      quizQuestion('动态演示的首要作用是什么？', 'What is the primary role of an interactive demo?', ['让问题变成可观察的变化', '增加页面装饰', '替代所有结构分析', '自动给出唯一答案'], ['Make the problem observable through change', 'Add decoration to the page', 'Replace all structural analysis', 'Produce one automatic answer'], 0, '交互验证把抽象的布局规则变成可观察、可比较的变化。', 'Interactive validation turns abstract layout rules into observable, comparable changes.'),
+      quizQuestion('调整 gap 或列数时，主要可以观察什么？', 'What can you mainly observe when changing gap or column count?', ['浏览器如何重新分配空间', '网页是否换了语言', '图片是否被重新压缩', 'DOM 标签是否自动消失'], ['How the browser redistributes space', 'Whether the language changed', 'Whether images were recompressed', 'Whether DOM tags disappear automatically'], 0, '参数变化能帮助我们看到间距、列轨道和剩余空间之间的关系。', 'Parameter changes reveal the relationship between gaps, tracks, and remaining space.'),
+      quizQuestion('验证布局时，为什么不追求唯一答案？', 'Why do we not seek one single answer when validating layout?', ['因为不同内容和约束可以产生多种合理布局', '因为 CSS 没有规则', '因为所有布局都一样', '因为不需要解释变化'], ['Because different content and constraints can yield multiple valid layouts', 'Because CSS has no rules', 'Because every layout is the same', 'Because changes do not need explanation'], 0, '验证关注的是规则是否有清楚职责，以及变化是否能被解释。', 'Validation focuses on whether rules have clear responsibilities and whether changes can be explained.'),
+      quizQuestion('什么比“看起来差不多”更重要？', 'What matters more than “it looks about right”?', ['能够解释变化为什么发生', '使用更多颜色', '加入更大的阴影', '把代码写得更长'], ['Being able to explain why the change happened', 'Using more colors', 'Adding a larger shadow', 'Writing longer code'], 0, '能解释变化，说明你理解了空间规则，而不是只记住一个结果。', 'Explaining the change shows that you understand the spatial rule rather than memorizing one result.'),
+      quizQuestion('一个好的验证反馈应该帮助你确认什么？', 'What should useful validation feedback help you confirm?', ['每条布局规则的空间职责', '每个元素是否都有渐变', '页面是否足够花哨', '代码是否完全不重复'], ['The spatial responsibility of each layout rule', 'Whether every element has a gradient', 'Whether the page is decorative enough', 'Whether the code has no repetition'], 0, '反馈应回到规则与空间职责，而不是只评价表面效果。', 'Feedback should return to rules and spatial responsibility rather than surface appearance alone.' )
+    ]
+  }
+};
+
+function quizStorageKey(sectionId) {
+  return `layout-lab-section-quiz-${sectionId}`;
+}
+
+function createQuizState(total) {
+  return { currentQuestionIndex: 0, answers: Array(total).fill(null), submitted: Array(total).fill(false), completed: false, score: 0, reviewCurrent: false, reviewAll: false };
+}
+
+function loadQuizState(sectionId, total) {
+  const initial = createQuizState(total);
+  try {
+    const saved = JSON.parse(localStorage.getItem(quizStorageKey(sectionId)) || 'null');
+    if (!saved || !Array.isArray(saved.answers) || !Array.isArray(saved.submitted)) return initial;
+    const state = { ...initial, ...saved };
+    state.answers = initial.answers.map((value, index) => Number.isInteger(saved.answers[index]) ? saved.answers[index] : value);
+    state.submitted = initial.submitted.map((value, index) => Boolean(saved.submitted[index]));
+    state.currentQuestionIndex = Math.min(Math.max(Number(saved.currentQuestionIndex) || 0, 0), total - 1);
+    state.score = state.submitted.reduce((score, submitted, index) => score + (submitted && state.answers[index] === sectionQuizMap[sectionId].questions[index].answer ? 1 : 0), 0);
+    state.completed = state.submitted.every(Boolean) && state.submitted.length === total;
+    return state;
+  } catch {
+    return initial;
+  }
+}
+
+function saveQuizState(sectionId, state) {
+  localStorage.setItem(quizStorageKey(sectionId), JSON.stringify(state));
+}
+
+function renderQuizProgress(quiz, state) {
+  const completed = state.submitted.filter(Boolean).length;
+  const dots = quiz.questions.map((_, index) => `<button type="button" class="quiz-progress-dot ${state.submitted[index] ? 'is-done' : ''} ${index === state.currentQuestionIndex ? 'is-current' : ''}" data-quiz-index="${index}" aria-label="${lang === 'zh' ? `第 ${index + 1} 题` : `Question ${index + 1}`}" ${index > Math.max(state.currentQuestionIndex, state.answers.findLastIndex((answer) => answer !== null)) ? 'disabled' : ''}></button>`).join('');
+  return `<div class="quiz-progress"><div><span>${lang === 'zh' ? '进度' : 'Progress'}</span><strong>${completed} / ${quiz.questions.length}</strong></div><div class="quiz-progress-dots">${dots}</div></div>`;
+}
+
+function renderQuizSummary(quiz, state) {
+  const score = state.score;
+  const percent = Math.round((score / quiz.questions.length) * 100);
+  const feedback = score >= 4 ? (lang === 'zh' ? '很好，你已经掌握了本节的核心判断逻辑。' : 'Good work. You have the core judgment of this section.') : (lang === 'zh' ? '建议回看讲解或动态演示，再观察一次布局变化。' : 'Review the explanation or demo, then observe the layout change once more.');
+  const reviews = state.reviewAll ? `<div class="quiz-review-list">${quiz.questions.map((question, index) => `<article class="quiz-review-item"><span>Q${index + 1}</span><div><strong>${esc(t(question.question))}</strong><p>${esc(t(question.explanation))}</p></div></article>`).join('')}</div>` : '';
+  return `<div class="quiz-header"><div><span class="quiz-eyebrow">QUIZ</span><strong>${lang === 'zh' ? '小节测验' : 'Section quiz'}</strong></div><span class="quiz-section-label">Section 0${currentSectionId()}</span></div><div class="quiz-summary"><span class="quiz-summary-label">${lang === 'zh' ? 'QUIZ COMPLETE' : 'QUIZ COMPLETE'}</span><h3>${lang === 'zh' ? '本节测验已完成' : 'Section quiz complete'}</h3><div class="quiz-score"><strong>${score} / ${quiz.questions.length}</strong><span>${lang === 'zh' ? '正确率' : 'Accuracy'} ${percent}%</span></div><p>${feedback}</p><div class="quiz-summary-actions"><button type="button" class="quiz-button quiz-button-primary" data-quiz-action="reset">${lang === 'zh' ? '重新作答' : 'Try again'}</button><button type="button" class="quiz-button quiz-button-quiet" data-quiz-action="review-all">${state.reviewAll ? (lang === 'zh' ? '收起解析' : 'Hide explanations') : (lang === 'zh' ? '查看全部解析' : 'Review all')}</button></div>${reviews}</div>${renderQuizProgress(quiz, state)}`;
+}
+
+function renderQuizQuestion(quiz, state) {
+  const index = state.currentQuestionIndex;
+  const question = quiz.questions[index];
+  const submitted = state.submitted[index];
+  const selected = state.answers[index];
+  const feedback = submitted ? `<div class="quiz-feedback ${selected === question.answer ? 'is-correct' : 'is-wrong'}"><strong>${selected === question.answer ? '✓' : '×'} ${selected === question.answer ? (lang === 'zh' ? '回答正确' : 'Correct') : (lang === 'zh' ? '回答错误' : 'Not quite')}</strong>${state.reviewCurrent ? `<span>${lang === 'zh' ? '解析' : 'Explanation'}</span><p>${esc(t(question.explanation))}</p>` : ''}</div>` : '';
+  const options = question.options[lang].map((option, optionIndex) => `<button type="button" class="quiz-option ${selected === optionIndex ? 'is-selected' : ''} ${submitted && optionIndex === question.answer ? 'is-answer' : ''} ${submitted && selected === optionIndex && selected !== question.answer ? 'is-incorrect' : ''}" data-quiz-option="${optionIndex}" ${submitted ? 'disabled' : ''}><span>${String.fromCharCode(65 + optionIndex)}</span><strong>${esc(option)}</strong><i>${submitted && optionIndex === question.answer ? '✓' : ''}</i></button>`).join('');
+  const nextLabel = index === quiz.questions.length - 1 && submitted ? (lang === 'zh' ? '完成测验' : 'Complete quiz') : (lang === 'zh' ? '下一题' : 'Next');
+  return `<div class="quiz-header"><div><span class="quiz-eyebrow">QUIZ</span><strong>${lang === 'zh' ? '小节测验' : 'Section quiz'}</strong></div><div class="quiz-header-meta"><span>Section 0${currentSectionId()}</span><strong>${index + 1} / ${quiz.questions.length}</strong></div></div><div class="quiz-question"><span class="quiz-question-kicker">Q${String(index + 1).padStart(2, '0')}</span><h3>${esc(t(question.question))}</h3><div class="quiz-options">${options}</div>${feedback}</div><div class="quiz-controls"><div class="quiz-nav-row"><button type="button" class="quiz-button quiz-button-quiet" data-quiz-action="previous" ${index === 0 ? 'disabled' : ''}>← ${lang === 'zh' ? '上一题' : 'Previous'}</button><button type="button" class="quiz-button quiz-button-quiet" data-quiz-action="next" ${!submitted ? 'disabled' : ''}>${nextLabel} →</button></div><div class="quiz-action-row"><button type="button" class="quiz-button quiz-button-primary" data-quiz-action="submit" ${selected === null || submitted ? 'disabled' : ''}>${lang === 'zh' ? '提交答案' : 'Submit answer'}</button><button type="button" class="quiz-button quiz-button-link" data-quiz-action="review" ${!submitted ? 'disabled' : ''}>${state.reviewCurrent ? (lang === 'zh' ? '收起解析' : 'Hide explanation') : (lang === 'zh' ? '查看解析' : 'View explanation')}</button></div></div>${renderQuizProgress(quiz, state)}`;
+}
+
+function currentSectionId() {
+  return Number(document.body.dataset.section || 1);
+}
+
+function renderSectionQuizCard(section) {
+  const quiz = sectionQuizMap[section.id];
+  const state = loadQuizState(section.id, quiz.questions.length);
+  const aside = document.createElement('aside');
+  aside.className = 'section-quiz-aside';
+  aside.setAttribute('aria-label', lang === 'zh' ? '小节随堂小测' : 'Section quiz');
+  const render = () => {
+    aside.innerHTML = `<div class="quiz-card ${state.completed ? 'is-complete' : ''}">${state.completed ? renderQuizSummary(quiz, state) : renderQuizQuestion(quiz, state)}</div>`;
+    aside.querySelectorAll('[data-quiz-option]').forEach((button) => button.addEventListener('click', () => {
+      if (state.submitted[state.currentQuestionIndex]) return;
+      state.answers[state.currentQuestionIndex] = Number(button.dataset.quizOption);
+      saveQuizState(section.id, state);
+      render();
+    }));
+    aside.querySelectorAll('[data-quiz-index]').forEach((button) => button.addEventListener('click', () => {
+      const index = Number(button.dataset.quizIndex);
+      state.currentQuestionIndex = index;
+      state.reviewCurrent = false;
+      saveQuizState(section.id, state);
+      render();
+    }));
+    aside.querySelectorAll('[data-quiz-action]').forEach((button) => button.addEventListener('click', () => {
+      const action = button.dataset.quizAction;
+      if (action === 'submit') {
+        state.submitted[state.currentQuestionIndex] = true;
+        state.score = state.submitted.reduce((score, submitted, index) => score + (submitted && state.answers[index] === quiz.questions[index].answer ? 1 : 0), 0);
+        state.completed = state.submitted.every(Boolean);
+        state.reviewCurrent = false;
+      } else if (action === 'previous') {
+        state.currentQuestionIndex = Math.max(0, state.currentQuestionIndex - 1);
+        state.reviewCurrent = false;
+      } else if (action === 'next') {
+        if (state.currentQuestionIndex === quiz.questions.length - 1 && state.submitted.every(Boolean)) state.completed = true;
+        else state.currentQuestionIndex = Math.min(quiz.questions.length - 1, state.currentQuestionIndex + 1);
+        state.reviewCurrent = false;
+      } else if (action === 'review') {
+        state.reviewCurrent = !state.reviewCurrent;
+      } else if (action === 'review-all') {
+        state.reviewAll = !state.reviewAll;
+      } else if (action === 'reset') {
+        Object.assign(state, createQuizState(quiz.questions.length));
+      }
+      saveQuizState(section.id, state);
+      render();
+    }));
+  };
+  render();
+  return aside;
+}
 
 function renderChapterOneOverview() {
   const chapter = chapters[0];
@@ -417,6 +638,12 @@ function renderChapterOneOverview() {
   const model = chapterModel[1][lang];
   const content = `<div class="chapter-overview-layout"><aside class="chapter-section-rail"><div class="chapter-section-rail-heading"><span>${lang === 'zh' ? '学习轨道' : 'Learning rail'}</span><small>01 / 05</small></div>${railItems}<section class="learning-method"><div class="aux-heading"><span>LEARNING LOOP</span><small>${lang === 'zh' ? '学习循环' : 'Learning loop'}</small></div><div class="learning-method-list"></div></section></aside><div class="chapter-overview-content"><div class="chapter-breadcrumb"><a href="${root}index.html">${ui[lang].home}</a><span>/</span><span>${lang === 'zh' ? '第 1 章' : 'Chapter 1'}</span></div><section class="chapter-overview-hero"><div><span class="eyebrow">${esc(t(chapter.kicker))}</span><h1>${esc(t(chapter.title))}</h1><div class="chapter-hero-subtitle">${lang === 'zh' ? 'Layout Awareness · Layout Fundamentals' : 'Layout Awareness · Layout Fundamentals'}</div><p>${esc(t(chapter.summary))}</p><div class="chapter-focus"><span>${lang === 'zh' ? '本章聚焦' : 'Chapter focus'}</span><strong>${lang === 'zh' ? '为什么页面混乱，往往不是因为元素太多，而是因为没有先建立布局关系。' : 'Why does a page feel cluttered? Often because relationships were never established first.'}</strong><small>${lang === 'zh' ? '核心概念：内容关系 · 空间模型 · 页面骨架' : 'Core concepts: content relationships · spatial model · page skeleton'}</small></div></div><div class="chapter-overview-meta"><span>CHAPTER</span><strong>01</strong><small>${lang === 'zh' ? '第 1 章 · 页面布局基础' : 'Chapter 01 · Layout foundations'}</small><div class="chapter-overview-stats"><b>5 <i>${lang === 'zh' ? '小节' : 'Sections'}</i></b><b>15 <i>${lang === 'zh' ? '学习模块' : 'Learning tabs'}</i></b><b>32 <i>min</i></b></div><div class="chapter-meta-progress-label"><span>${lang === 'zh' ? '本章进度' : 'Chapter progress'}</span><b>1 / 5</b></div><div class="chapter-overview-progress"><span style="width:20%"></span></div><section class="learning-outcomes"><div class="aux-heading"><span>AFTER THIS CHAPTER</span><small>${lang === 'zh' ? '完成本章后' : 'Learning outcomes'}</small></div><ul>${outcomeMarkup}</ul></section></div></section><section class="section-directory"><div class="section-directory-heading"><div><span class="eyebrow">${model.title}</span><h2>${model.subtitle}</h2></div><p>${model.intro}</p></div><div class="chapter-model-list"></div></section><div class="chapter-footer"><a class="back-link" href="${root}index.html">← ${ui[lang].back}</a><a class="next-link" href="${root}chapters/chapter-02.html">${ui[lang].next} →</a></div></div></div>`;
   document.querySelector('#app').innerHTML = shell(content, 1);
+  const overviewContent = document.querySelector('.chapter-overview-content');
+  const overviewMain = document.createElement('div');
+  overviewMain.className = 'chapter-overview-main';
+  overviewContent.insertBefore(overviewMain, overviewContent.firstChild);
+  ['.chapter-breadcrumb', '.chapter-overview-hero', '.section-directory', '.chapter-footer'].forEach((selector) => overviewMain.append(document.querySelector(selector)));
+  overviewContent.append(document.querySelector('.chapter-overview-meta'));
   const overviewMeta = chapterOverviewMeta[1];
   const concepts = overviewMeta.keyConcepts[lang].map(([primary, secondary], index) => `<li><b>0${index + 1}</b><span><strong>${primary}</strong><small>${secondary}</small></span></li>`).join('');
   document.querySelector('.learning-outcomes ul').innerHTML = overviewMeta.outcomes[lang].map((item) => `<li><span>✓</span>${item}</li>`).join('');
@@ -521,6 +748,17 @@ function renderStructuralReasoning(section, teaching) {
   return `<div class="section-structural-reasoning"><div class="section-code-explain-head"><span>STRUCTURAL REASONING</span><small>${lang === 'zh' ? '结构为什么这样组织？' : 'Why this structure?'}</small></div><div class="structure-role-grid">${items}</div><div class="structure-principle"><span>STRUCTURE PRINCIPLE</span><strong>${lang === 'zh' ? '先确定 DOM 层级，再决定布局关系。' : 'Set the DOM hierarchy first, then decide the layout relationship.'}</strong><p>${lang === 'zh' ? '先确定谁包含谁，再确定谁与谁并列，最后让这些区域通过 CSS 进入页面空间。' : 'Decide who contains whom, then which regions sit side by side, and finally let CSS place them in page space.'}</p></div><div class="from-structure-layout"><div class="section-code-explain-head"><span>FROM STRUCTURE TO LAYOUT</span><small>${lang === 'zh' ? '从结构到布局' : 'From structure to layout'}</small></div><div class="mapping-steps"><div><b>DOM</b><strong>aside + section</strong></div><i>↓</i><div><b>CSS</b><strong>${section.id === 1 ? 'grid-template-columns: 240px 1fr' : 'grid-template-areas'}</strong></div><i>↓</i><div><b>VISUAL</b><strong>[ NAV&nbsp;&nbsp;|&nbsp;&nbsp;CONTENT ]</strong></div></div></div><p class="section-teaching-note">${esc(teaching.code)}</p></div>`;
 }
 
+function renderChapterLessonExpansion(section, lesson) {
+  const zh = lang === 'zh';
+  const list = (items) => `<ul>${items.map((item) => `<li>${esc(item)}</li>`).join('')}</ul>`;
+  return `<div class="section-content-expansion"><div class="lesson-block lesson-problem"><span>PROBLEM</span><h3>${zh ? '问题场景' : 'Problem scene'}</h3><p>${esc(lesson.problem)}</p></div><div class="lesson-block lesson-why"><span>WHY</span><h3>${zh ? '为什么会出现这个问题？' : 'Why does it happen?'}</h3><p>${esc(lesson.why)}</p></div><div class="lesson-block lesson-principle"><span>PRINCIPLE</span><h3>${zh ? '核心原则' : 'Core principle'}</h3><p>${esc(lesson.principle)}</p></div><div class="lesson-block lesson-model"><span>MODEL</span><h3>${zh ? '关系 / 结构模型' : 'Relationship / structure model'}</h3>${list(lesson.model)}</div><div class="lesson-block lesson-example"><span>EXAMPLE</span><h3>${zh ? '当前案例中的表现' : 'The case in practice'}</h3><p>${esc(lesson.example)}</p></div><div class="lesson-block lesson-mistakes"><span>COMMON MISTAKES</span><h3>${zh ? '常见错误' : 'Common mistakes'}</h3>${list(lesson.mistakes)}</div><div class="lesson-block lesson-try-it"><div class="lesson-try-label">TRY IT</div><h3>${zh ? '试一试' : 'Try it'}</h3><p>${esc(lesson.tryIt)}</p></div><div class="lesson-close"><div><span>TAKEAWAY</span><strong>${esc(lesson.takeaway)}</strong></div><div><span>NEXT</span><strong>${esc(lesson.next)}</strong></div></div></div>`;
+}
+
+function renderChapterCodeWhy(lesson) {
+  const zh = lang === 'zh';
+  return `<div class="section-code-rationale"><span>WHY THIS CODE</span><strong>${zh ? '为什么这样写？' : 'Why this works'}</strong><p>${esc(lesson.codeWhy)}</p></div>`;
+}
+
 function bindSectionCodeMap(section) {
   const workbench = document.querySelector('.section-code-workbench');
   if (!workbench) return;
@@ -554,13 +792,15 @@ function bindSectionCodeMap(section) {
 
 function renderSectionRelationModel() {
   const zh = lang === 'zh';
-  return `<div class="section-relation-model"><div class="section-relation-head"><div><span>RELATION MODEL</span><strong>${zh ? '关系模型' : 'Relation model'}</strong><small>${zh ? '内容关系如何转化成页面结构' : 'How content relationships become layout structure'}</small></div><div class="relation-legend"><span><i class="legend-solid"></i>${zh ? '包含' : 'Containment'}</span><span><i class="legend-dashed"></i>${zh ? '对齐' : 'Alignment'}</span><span><i class="legend-priority">1</i>${zh ? '优先' : 'Priority'}</span></div></div><div class="relation-model-canvas"><svg viewBox="0 0 1000 360" preserveAspectRatio="none" aria-hidden="true"><path class="relation-containment" d="M500 68V94H260V116M500 68V94H740V116M740 178V202H570V228M740 178V202H805V228M805 288V310"/><path class="relation-alignment" d="M260 110V338M805 220V338M550 214H830"/></svg><div class="relation-node relation-page-node"><b>PAGE</b><strong>${zh ? '页面' : 'Page'}</strong><small>Page boundary</small></div><div class="relation-node relation-info-node"><b>01</b><strong>${zh ? '课程信息' : 'Course Info'}</strong><small>${zh ? 'Course Info' : '课程信息'}</small></div><div class="relation-node relation-main-node"><strong>${zh ? '主体区域' : 'Main Area'}</strong><small>${zh ? 'Main Area' : '主体区域'}</small></div><div class="relation-node relation-nav-node"><strong>${zh ? '章节导航' : 'Chapter Nav'}</strong><small>${zh ? 'Chapter Nav' : '章节导航'}</small><em>${zh ? '结构区域' : 'Persistent structure'}</em></div><div class="relation-node relation-learning-node is-primary"><b>02</b><strong>${zh ? '学习内容' : 'Learning Content'}</strong><small>${zh ? 'Learning Content' : '学习内容'}</small></div><div class="relation-node relation-demo-node is-secondary"><b>03</b><strong>${zh ? '辅助演示' : 'Demo'}</strong><small>${zh ? 'Demo' : '辅助演示'}</small></div></div></div><div class="section-look-first"><span>LOOK FIRST</span><strong>${zh ? '先判断：谁属于谁　·　谁先被看到　·　哪些区域应该对齐' : 'Ask first: what belongs together · what comes first · what should align'}</strong></div>`;
+  return `<div class="section-relation-model"><div class="section-relation-head"><div><span>RELATION MODEL</span><strong>${zh ? '关系模型' : 'Relation model'}</strong><small>${zh ? '内容关系如何转化成页面结构' : 'How content relationships become layout structure'}</small></div><div class="relation-legend"><span><i class="legend-solid"></i>${zh ? '包含' : 'Containment'}</span><span><i class="legend-dashed"></i>${zh ? '对齐' : 'Alignment'}</span><span><i class="legend-priority">1</i>${zh ? '优先' : 'Priority'}</span></div></div><div class="relation-model-canvas"><svg viewBox="0 0 1000 360" preserveAspectRatio="none" aria-hidden="true"><path class="relation-containment" d="M500 68V94H260V116M500 68V94H740V116M740 178V202H570V228M740 178V202H805V228M805 288V310"/><path class="relation-alignment" d="M805 220V338M550 214H830"/></svg><div class="relation-node relation-page-node"><b>PAGE</b><strong>${zh ? '页面' : 'Page'}</strong><small>Page boundary</small></div><div class="relation-node relation-info-node"><b>01</b><strong>${zh ? '课程信息' : 'Course Info'}</strong><small>Course Info</small></div><div class="relation-node relation-main-node"><strong>${zh ? '主体区域' : 'Main Area'}</strong><small>${zh ? '主体区域' : 'Main Area'}</small></div><div class="relation-node relation-nav-node"><strong>${zh ? '章节导航' : 'Chapter Nav'}</strong><small>${zh ? '章节导航' : 'Chapter Nav'}</small><em>${zh ? '结构区域' : 'Persistent structure'}</em></div><div class="relation-node relation-learning-node is-primary"><b>02</b><strong>${zh ? '学习内容' : 'Learning Content'}</strong><small>${zh ? '学习内容' : 'Learning Content'}</small></div><div class="relation-node relation-demo-node is-secondary"><b>03</b><strong>${zh ? '辅助演示' : 'Demo'}</strong><small>${zh ? '辅助演示' : 'Demo'}</small></div></div></div><div class="section-look-first"><span>LOOK FIRST</span><strong>${zh ? '先判断：谁属于谁　·　谁先被看到　·　哪些区域应该对齐' : 'Ask first: what belongs together · what comes first · what should align'}</strong></div>`;
 }
 
 function renderSectionPage() {
+  document.body.classList.remove('workspace-expanded');
   const section = chapterOneSections.find((item) => item.id === Number(document.body.dataset.section)) || chapterOneSections[0];
   const prev = chapterOneSections.find((item) => item.id === section.id - 1);
   const next = chapterOneSections.find((item) => item.id === section.id + 1);
+  const nextSectionLabel = lang === 'zh' ? '下一节' : 'Next section';
   const sectionLinks = chapterOneSections.map((item) => `<a class="section-nav-item ${item.id === section.id ? 'is-active' : ''}" href="./chapter-01-section-0${item.id}.html"><span>0${item.id}</span>${esc(t(item.title))}</a>`).join('');
   const sectionRailTitles = {
     1: { zh: '观察问题', en: 'Observe the problem' },
@@ -575,7 +815,8 @@ function renderSectionPage() {
     return `<a class="section-rail-item ${status}" href="./chapter-01-section-0${item.id}.html"><span class="section-rail-marker"><b>0${item.id}</b><i>${marker}</i></span><span class="section-rail-title">${esc(sectionRailTitles[item.id][lang])}</span></a>`;
   }).join('');
   const code = renderCodeReader(section);
-  const content = `<div class="chapter-breadcrumb"><a href="./chapter-01.html">${lang === 'zh' ? '第 1 章' : 'Chapter 1'}</a><span>/</span><span>0${section.id}</span></div><section class="section-page-heading"><div><span class="eyebrow">${lang === 'zh' ? `第 1 章 · 小节 0${section.id}` : `Chapter 1 · Section 0${section.id}`}</span><h1>${esc(t(section.title))}</h1><p>${esc(t(section.summary))}</p></div><div class="section-page-count"><strong>0${section.id}</strong><span>/ 05</span></div></section><nav class="section-nav" aria-label="${lang === 'zh' ? '第 1 章小节导航' : 'Chapter 1 section navigation'}"><div class="section-nav-title">${lang === 'zh' ? '章节目录' : 'Chapter sections'}</div>${sectionLinks}</nav><section class="section-learning"><div class="section-tabs" role="tablist" aria-label="${lang === 'zh' ? '学习内容类型' : 'Learning modes'}"><button class="section-tab is-active" type="button" role="tab" aria-selected="true" data-panel="explain-panel">01 ${ui[lang].explain}</button><button class="section-tab" type="button" role="tab" aria-selected="false" data-panel="code-panel">02 ${ui[lang].code}</button><button class="section-tab" type="button" role="tab" aria-selected="false" data-panel="demo-panel">03 ${ui[lang].demo}</button></div><article class="section-panel is-active" id="explain-panel" role="tabpanel"><div class="section-panel-kicker">01 · ${ui[lang].explain}</div><h2>${esc(lang === 'zh' ? '先理解问题，再决定布局方式' : 'Understand the problem before choosing the layout')}</h2><div class="section-explanation-block"><span>WHY</span><p>${esc(section.explanation[lang][0])}</p></div><div class="section-explanation-block"><span>BROWSER VIEW</span><p>${esc(section.explanation[lang][1])}</p></div><div class="section-principle"><span><b>PRINCIPLE</b><em>${ui[lang].principle}</em></span><strong>${esc(t(section.principle))}</strong></div></article><article class="section-panel" id="code-panel" role="tabpanel" hidden><div class="section-panel-kicker">02 · ${ui[lang].code}<button class="copy-button" type="button" data-copy-target="section-code">${ui[lang].copy}</button></div><div class="section-code-window"><div class="code-window-bar"><span></span><span></span><span></span><em>layout.css</em></div><pre><code id="section-code" data-copy-raw="${esc(section.code)}">${code}</code></pre></div><p class="section-code-note">⌘ ${lang === 'zh' ? '这段代码对应本小节的一个空间决定。' : 'This code represents one spatial decision in this section.'}</p></article><article class="section-panel" id="demo-panel" role="tabpanel" hidden><div class="section-panel-kicker">03 · ${ui[lang].demo}</div><h2>${lang === 'zh' ? '把理论变成可观察的变化' : 'Turn theory into observable change'}</h2><p class="section-demo-intro">${ui[lang].control}</p><div id="section-demo"></div></article></section><div class="section-page-footer"><a href="${prev ? `./chapter-01-section-0${prev.id}.html` : './chapter-01.html'}">← ${prev ? esc(t(prev.title)) : ui[lang].back}</a>${next ? `<a href="./chapter-01-section-0${next.id}.html">${ui[lang].next}：${esc(t(next.title))} →</a>` : `<a href="./chapter-02.html">${ui[lang].next} →</a>`}</div>`;
+  const nextJoin = lang === 'zh' ? '：' : ': ';
+  const content = `<div class="chapter-breadcrumb"><a href="./chapter-01.html">${lang === 'zh' ? '第 1 章' : 'Chapter 1'}</a><span>/</span><span>0${section.id}</span></div><section class="section-page-heading"><div><span class="eyebrow">${lang === 'zh' ? `第 1 章 · 小节 0${section.id}` : `Chapter 1 · Section 0${section.id}`}</span><h1>${esc(t(section.title))}</h1><p>${esc(t(section.summary))}</p></div><div class="section-page-count"><strong>0${section.id}</strong><span>/ 05</span></div></section><nav class="section-nav" aria-label="${lang === 'zh' ? '第 1 章小节导航' : 'Chapter 1 section navigation'}"><div class="section-nav-title">${lang === 'zh' ? '章节目录' : 'Chapter sections'}</div>${sectionLinks}</nav><section class="section-learning"><div class="section-tabs" role="tablist" aria-label="${lang === 'zh' ? '学习内容类型' : 'Learning modes'}"><button class="section-tab is-active" type="button" role="tab" aria-selected="true" data-panel="explain-panel">01 ${ui[lang].explain}</button><button class="section-tab" type="button" role="tab" aria-selected="false" data-panel="code-panel">02 ${ui[lang].code}</button><button class="section-tab" type="button" role="tab" aria-selected="false" data-panel="demo-panel">03 ${ui[lang].demo}</button></div><article class="section-panel is-active" id="explain-panel" role="tabpanel"><div class="section-panel-kicker">01 · ${ui[lang].explain}</div><h2>${esc(lang === 'zh' ? '先理解问题，再决定布局方式' : 'Understand the problem before choosing the layout')}</h2><div class="section-explanation-block"><span>WHY</span><p>${esc(section.explanation[lang][0])}</p></div><div class="section-explanation-block"><span>BROWSER VIEW</span><p>${esc(section.explanation[lang][1])}</p></div><div class="section-principle"><span><b>PRINCIPLE</b><em>${ui[lang].principle}</em></span><strong>${esc(t(section.principle))}</strong></div></article><article class="section-panel" id="code-panel" role="tabpanel" hidden><div class="section-panel-kicker">02 · ${ui[lang].code}<button class="copy-button" type="button" data-copy-target="section-code">${ui[lang].copy}</button></div><div class="section-code-window"><div class="code-window-bar"><span></span><span></span><span></span><em>layout.css</em></div><pre><code id="section-code" data-copy-raw="${esc(section.code)}">${code}</code></pre></div><p class="section-code-note">⌘ ${lang === 'zh' ? '这段代码对应本小节的一个空间决定。' : 'This code represents one spatial decision in this section.'}</p></article><article class="section-panel" id="demo-panel" role="tabpanel" hidden><div class="section-panel-kicker">03 · ${ui[lang].demo}</div><h2>${lang === 'zh' ? '把理论变成可观察的变化' : 'Turn theory into observable change'}</h2><p class="section-demo-intro">${ui[lang].control}</p><div id="section-demo"></div></article></section><div class="section-page-footer"><a href="${prev ? `./chapter-01-section-0${prev.id}.html` : './chapter-01.html'}">← ${prev ? esc(t(prev.title)) : ui[lang].back}</a>${next ? `<a href="./chapter-01-section-0${next.id}.html">${nextSectionLabel}${nextJoin}${esc(t(next.title))} →</a>` : `<a href="./chapter-02.html">${nextSectionLabel} →</a>`}</div>`;
   document.querySelector('#app').innerHTML = shell(content, 1);
   const pageMain = document.querySelector('.main-content');
   const topNav = pageMain?.querySelector('.section-nav');
@@ -585,11 +826,12 @@ function renderSectionPage() {
     readerLayout.className = 'section-reader-layout';
     const rail = document.createElement('aside');
     rail.className = 'section-page-rail';
-    rail.innerHTML = `<button class="section-rail-toggle" type="button" aria-expanded="false"><span>${lang === 'zh' ? '本章小节' : 'Chapter sections'}</span><b>0${section.id} / 05</b><i>⌄</i></button><div class="section-rail-panel"><div class="section-rail-heading"><span>${lang === 'zh' ? 'SECTION NAVIGATION' : 'SECTION NAVIGATION'}</span><small>${lang === 'zh' ? '本章小节' : 'Chapter sections'}</small><b>0${section.id} / 05</b></div><nav class="section-rail-list" aria-label="${lang === 'zh' ? '第 1 章小节导航' : 'Chapter 1 section navigation'}">${sectionRailItems}</nav></div>`;
+    rail.innerHTML = `<button class="section-rail-toggle" type="button" aria-expanded="false"><span>${lang === 'zh' ? '本章小节' : 'Chapter sections'}</span><b>0${section.id} / 05</b><i>⌄</i></button><div class="section-rail-panel"><div class="section-rail-heading"><span>${lang === 'zh' ? '章节导航' : 'SECTION NAVIGATION'}</span><small>${lang === 'zh' ? '本章小节' : 'Chapter sections'}</small><b>0${section.id} / 05</b></div><nav class="section-rail-list" aria-label="${lang === 'zh' ? '第 1 章小节导航' : 'Chapter 1 section navigation'}">${sectionRailItems}</nav></div>`;
     const pageContent = document.createElement('div');
     pageContent.className = 'section-page-content';
+    const quizAside = renderSectionQuizCard(section);
     while (pageMain.firstElementChild) pageContent.append(pageMain.firstElementChild);
-    readerLayout.append(rail, pageContent);
+    readerLayout.append(rail, pageContent, quizAside);
     pageMain.append(readerLayout);
     const count = pageContent.querySelector('.section-page-count');
     if (count) count.innerHTML = `<span>SECTION 0${section.id}</span>`;
@@ -600,7 +842,10 @@ function renderSectionPage() {
   }
   const teaching = sectionTeaching[section.id][lang];
   document.querySelector('#explain-panel')?.insertAdjacentHTML('beforeend', `<div class="section-teaching-block"><h3>${lang === 'zh' ? '学习要点' : 'Learning points'}</h3><ul>${teaching.points.map((point) => `<li>${esc(point)}</li>`).join('')}</ul>${teaching.explain.map((paragraph) => `<p>${esc(paragraph)}</p>`).join('')}</div>`);
+  const lesson = chapterLessonContent[section.id][lang];
+  document.querySelector('#explain-panel')?.insertAdjacentHTML('beforeend', renderChapterLessonExpansion(section, lesson));
   document.querySelector('#code-panel')?.insertAdjacentHTML('beforeend', renderStructuralReasoning(section, teaching));
+  document.querySelector('#code-panel')?.insertAdjacentHTML('beforeend', renderChapterCodeWhy(lesson));
   document.querySelector('#demo-panel')?.insertAdjacentHTML('beforeend', `<div class="section-demo-guide"><h3>${lang === 'zh' ? '观察任务' : 'Observation task'}</h3><p>${esc(teaching.demo)}</p><div class="section-result"><span>${lang === 'zh' ? '本节结论' : 'Takeaway'}</span><strong>${esc(teaching.result)}</strong></div></div>`);
   const explainPanel = document.querySelector('#explain-panel');
   explainPanel?.querySelector('h2')?.insertAdjacentHTML('afterend', `<p class="section-mode-subtitle">${lang === 'zh' ? '建立对页面布局的判断方法，而不是直接记住 CSS。' : 'Build a way to judge layout instead of memorizing CSS properties.'}</p>`);
@@ -648,7 +893,7 @@ function renderSectionPage() {
   }
   document.body.classList.add('section-page-body');
   bindGlobal();
-  document.querySelectorAll('.section-tab').forEach((tab) => tab.addEventListener('click', () => { document.querySelectorAll('.section-tab').forEach((item) => { const active = item === tab; item.classList.toggle('is-active', active); item.setAttribute('aria-selected', String(active)); }); document.querySelectorAll('.section-panel').forEach((panel) => { const active = panel.id === tab.dataset.panel; panel.classList.toggle('is-active', active); panel.hidden = !active; }); if (tab.dataset.panel === 'demo-panel') renderDemo(section.demo); }));
+  document.querySelectorAll('.section-tab').forEach((tab) => tab.addEventListener('click', () => { document.body.classList.remove('workspace-expanded'); document.querySelectorAll('.section-tab').forEach((item) => { const active = item === tab; item.classList.toggle('is-active', active); item.setAttribute('aria-selected', String(active)); }); document.querySelectorAll('.section-panel').forEach((panel) => { const active = panel.id === tab.dataset.panel; panel.classList.toggle('is-active', active); panel.hidden = !active; }); document.querySelector('.section-page-content')?.classList.toggle('is-demo-active', tab.dataset.panel === 'demo-panel'); if (tab.dataset.panel === 'demo-panel') renderDemo(section.demo); }));
   renderDemo(section.demo);
 }
 
@@ -771,7 +1016,7 @@ function bindRadialSidebar() {
 }
 
 function bindGlobal() {
-  document.querySelector('.language-toggle')?.addEventListener('click', () => { lang = lang === 'zh' ? 'en' : 'zh'; localStorage.setItem('layout-lab-language', lang); document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en'; if (document.body.dataset.page === 'section') renderSectionPage(); else if (document.body.dataset.page === 'chapter') renderChapter(); else renderHome(); });
+  document.querySelector('.language-toggle')?.addEventListener('click', () => { lang = lang === 'zh' ? 'en' : 'zh'; localStorage.setItem('layout-lab-language', lang); document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en'; document.title = lang === 'en' ? (currentChapter ? `${ui.en.course} · ${t(currentChapter.title)}` : 'Layout with Intent · Introduction to Visualization') : originalTitle; if (document.body.dataset.page === 'section') renderSectionPage(); else if (document.body.dataset.page === 'chapter') renderChapter(); else if (document.body.dataset.page === 'workshop') renderGlobalWorkspace(); else renderHome(); });
   document.querySelectorAll('[data-copy-target]').forEach((button) => button.addEventListener('click', async () => { const target = document.getElementById(button.dataset.copyTarget); const text = target?.dataset.copyRaw || target?.textContent || ''; try { await navigator.clipboard.writeText(text); } catch { const area = document.createElement('textarea'); area.value = text; document.body.appendChild(area); area.select(); document.execCommand('copy'); area.remove(); } button.textContent = ui[lang].copied; setTimeout(() => { button.textContent = ui[lang].copy; }, 1400); }));
   bindRadialSidebar();
 }
@@ -784,8 +1029,8 @@ function demoFrame(title, controls, viz, status = '') { return `<div class="demo
 
 function labDefaults(sectionId) {
   return {
-    width: sectionId === 1 ? 1180 : 960, gap: sectionId === 1 ? 10 : 24, sidebar: sectionId === 1 ? 34 : 24,
-    padding: 24, alignment: 'start', hierarchy: 2, mode: 'contain', template: 'sidebar', columns: 2,
+    width: sectionId === 1 ? 1180 : 960, gap: sectionId === 1 ? 12 : 24, sidebar: sectionId === 1 ? 38 : 24,
+    padding: 24, alignment: 'start', hierarchy: 2, mode: 'contain', containment: 'main', flow: 'vertical', priority: 'content', template: 'sidebar', columns: 2,
     ratio: 'custom', display: 'grid', direction: 'row', justify: 'start', wrap: 'nowrap', device: 'desktop', selected: 'main', guides: false, grid: false, measurements: false,
     compare: false, density: 2, challenge: false, codeView: 'complete'
   };
@@ -798,8 +1043,31 @@ function readLabState(sectionId) {
 
 function saveLabState(sectionId, values) { localStorage.setItem(`chapter1-section${sectionId}-demo-state`, JSON.stringify(values)); }
 
+const sectionWorkspaceContributions = {
+  1: ['width', 'sidebar', 'gap'],
+  2: ['mode', 'alignment', 'hierarchy'],
+  3: ['template', 'columns', 'sidebar'],
+  4: ['display', 'selected', 'ratio'],
+  5: ['width', 'gap', 'padding', 'alignment', 'density', 'compare', 'challenge']
+};
+
+function chapterWorkspaceDefaults(chapterId = 1) { return { ...labDefaults(1), chapterId, cardSpan: 1, sectionGap: 28, demoWidth: 100, headerHeight: 72, issueMarkers: true, sourceSection: null, workspaceTool: 'diagnosis' }; }
+function readChapterWorkspaceState(chapterId = 1) {
+  const defaults = chapterWorkspaceDefaults(chapterId);
+  try { return { ...defaults, ...JSON.parse(localStorage.getItem(`chapter${chapterId}-workspace-state`) || '{}') }; } catch { return defaults; }
+}
+function saveChapterWorkspaceState(chapterId, values) { localStorage.setItem(`chapter${chapterId}-workspace-state`, JSON.stringify(values)); }
+function mergeSectionIntoWorkspace(chapterId, sectionId) {
+  const workspace = readChapterWorkspaceState(chapterId);
+  const section = readLabState(sectionId);
+  const contributions = sectionWorkspaceContributions[sectionId] || [];
+  const merged = { ...workspace, ...Object.fromEntries(contributions.map((key) => [key, section[key]])), sourceSection: sectionId };
+  saveChapterWorkspaceState(chapterId, merged);
+  return merged;
+}
+
 function labPropertyForKey(key) {
-  return { width: 'max-width', gap: 'gap', padding: 'padding', sidebar: 'grid-template-columns', alignment: 'align-items', display: 'display', ratio: 'grid-template-columns', direction: 'flex-direction', justify: 'justify-content', wrap: 'flex-wrap' }[key] || '';
+  return { width: 'max-width', gap: 'gap', padding: 'padding', sidebar: 'grid-template-columns', containment: 'containment', flow: 'flex-direction', alignment: 'align-items', priority: 'visual hierarchy', display: 'display', ratio: 'grid-template-columns', direction: 'flex-direction', justify: 'justify-content', wrap: 'flex-wrap' }[key] || '';
 }
 
 function labControlHeading(label, key, value = '') {
@@ -870,7 +1138,7 @@ function renderLiveCss(values, sectionId, lastChanged = '') {
 
 function labMiniPage(values, sectionId, interactive = true, before = false) {
   const template = sectionId === 3 ? values.template : 'sidebar';
-  const display = values.display;
+  const display = sectionId === 2 ? (values.flow === 'horizontal' ? 'flex' : 'grid') : values.display;
   const oneColumn = template === 'single' || values.columns === 1;
   const ratio = values.ratio === '2:1' ? '2fr 1fr' : values.ratio === '1:3' ? '1fr 3fr' : values.ratio === '1:1' ? '1fr 1fr' : values.ratio === '1:2' ? '1fr 2fr' : values.ratio === 'fixed' ? '240px 1fr' : `${values.sidebar}% minmax(0,1fr)`;
   const align = values.alignment === 'center' ? 'center' : values.alignment === 'stretch' ? 'stretch' : 'flex-start';
@@ -880,23 +1148,56 @@ function labMiniPage(values, sectionId, interactive = true, before = false) {
     : display === 'flex'
       ? `display:flex;flex-direction:${values.direction};flex-wrap:${values.wrap};justify-content:${justify};align-items:${align};gap:${values.gap}px;padding:${values.padding}px`
       : `display:block;padding:${values.padding}px`;
-  const pageClass = [values.guides ? 'has-guides' : '', values.grid ? 'has-grid' : '', values.measurements ? 'has-measurements' : '', before ? 'is-before' : '', `is-display-${display}`, `is-direction-${values.direction}`, `template-${template}`].filter(Boolean).join(' ');
-  const sidebarStyle = template === 'right' ? (display === 'flex' ? 'order:2' : 'grid-column:2;grid-row:1') : '';
+  const skeletonStyle = sectionId === 3
+    ? `display:grid;grid-template-columns:${template === 'single' ? '1fr' : template === 'editorial' ? 'minmax(0,1.5fr) minmax(120px,.5fr)' : template === 'two' ? '1fr 1fr' : '200px minmax(0,1fr)'};gap:24px;padding:${values.padding}px;align-items:start`
+    : bodyStyle;
+  const pageClass = [values.guides ? 'has-guides' : '', values.grid ? 'has-grid' : '', values.measurements ? 'has-measurements' : '', before ? 'is-before' : '', `is-display-${display}`, `is-direction-${values.direction}`, `template-${template}`, `relation-${values.containment}`, `priority-${values.priority}`].filter(Boolean).join(' ');
+  const sidebarStyle = template === 'single' ? 'display:none' : template === 'right' ? (display === 'flex' ? 'order:2' : 'grid-column:2;grid-row:1') : '';
   const data = (area) => interactive ? `data-lab-area="${area}"` : '';
   const selected = (area) => values.selected === area && interactive ? ' is-selected' : '';
+  if (sectionId >= 1 && sectionId <= 5) {
+    const micro = lang === 'zh' ? { title: '页面标题', subtitle: '布局问题需要通过空间关系来观察。', sidebar: 'Sidebar', main: 'Main Content', paragraph: '正文内容应该拥有清晰、连续的阅读路径。', cardA: '内容关系', cardB: '空间约束', demo: 'Demo Area', dom: 'DOM Tree', visual: 'Visual Space' } : { title: 'Page title', subtitle: 'Observe layout problems through spatial relationships.', sidebar: 'Sidebar', main: 'Main Content', paragraph: 'Primary content needs a clear and continuous reading path.', cardA: 'Content relation', cardB: 'Spatial constraint', demo: 'Demo Area', dom: 'DOM Tree', visual: 'Visual space' };
+    const ratio = `${Math.max(18, Math.min(42, values.sidebar))}% minmax(0,1fr)`;
+    const gap = Math.max(6, Math.round(values.gap / 2));
+    const contentWidth = Math.max(64, Math.min(100, Math.round((values.width / 1180) * 100)));
+    const hierarchyClass = values.hierarchy === 1 ? 'is-hierarchy-low' : values.hierarchy === 3 ? 'is-hierarchy-strong' : '';
+    const cards = `<div class="micro-cards"><article class="micro-card${selected('card')}" ${data('card')}><b>01</b><strong>${micro.cardA}</strong><span>${lang === 'zh' ? '把内容放入清晰关系' : 'Place content in a clear relation'}</span></article><article class="micro-card" ${data('card')}><b>02</b><strong>${micro.cardB}</strong><span>${lang === 'zh' ? '让空间支持阅读顺序' : 'Let space support reading order'}</span></article></div>`;
+    if (sectionId === 3) {
+      const templateClass = `micro-template-${values.template}`;
+      return `<div class="micro-frame micro-skeleton-frame ${templateClass}"><div class="micro-skeleton-title"><strong>${micro.title}</strong><span>${lang === 'zh' ? '同一组内容，不同的页面骨架。' : 'The same content, a different page skeleton.'}</span></div><div class="micro-skeleton-layout"><i>${micro.sidebar}</i><div><b>${micro.main}</b><p>${micro.paragraph}</p><em>${micro.demo}</em></div></div></div>`;
+    }
+    if (sectionId === 4) {
+      const dom = `<div class="micro-dom-tree"><span>main.course-page</span><span>├── header.course-header</span><span>└── div.course-body</span><span>　 ├── aside.chapter-nav</span><span>　 └── section.course-content</span></div>`;
+      const body = values.display === 'block' ? '<div class="micro-space-stack"><i>aside</i><i>main</i></div>' : '<div class="micro-space-row"><i>aside</i><i>main</i></div>';
+      return `<div class="micro-frame micro-dom-frame"><div class="micro-dom-pane"><small>${micro.dom}</small>${dom}</div><div class="micro-visual-pane"><small>${micro.visual}</small><div class="micro-dom-canvas is-display-${values.display}">${body}</div></div></div>`;
+    }
+    if (sectionId === 5) {
+      return `<div class="micro-frame micro-validation-frame ${hierarchyClass}" style="--micro-gap:${gap}px;--micro-content-width:${contentWidth}%"><div class="micro-validation-column"><small>BEFORE</small><div class="micro-validation-page is-before"><div class="micro-mini-title">${micro.title}</div><div class="micro-mini-body" style="grid-template-columns:${ratio};gap:10px"><i>${micro.sidebar}</i><div><b>${micro.main}</b><p>${micro.paragraph}</p>${cards}</div></div></div></div><div class="micro-validation-column"><small>CURRENT</small><div class="micro-validation-page"><div class="micro-mini-title">${micro.title}</div><div class="micro-mini-body" style="grid-template-columns:${ratio};gap:var(--micro-gap)"><i>${micro.sidebar}</i><div style="max-width:var(--micro-content-width)"><b>${micro.main}</b><p>${micro.paragraph}</p>${cards}</div></div></div></div></div>`;
+    }
+    if (sectionId === 2) {
+      const relationClass = `relation-containment-${values.containment} relation-flow-${values.flow} relation-align-${values.alignment} relation-priority-${values.priority}`;
+      const demo = `<em ${data('card')}>${micro.demo}</em>`;
+      const insideMain = values.containment === 'main' ? demo : '';
+      const outsideMain = values.containment === 'body' ? `<em class="micro-relation-demo" ${data('card')}>${micro.demo}</em>` : '';
+      return `<div class="micro-frame micro-relation-frame ${relationClass}"><div class="micro-relation-page"><small>CONTAINER</small><div class="micro-relation-body"><i ${data('aside')}>${micro.sidebar}</i><div ${data('main')}><b>${micro.main}</b><span>${micro.paragraph}</span>${insideMain}</div></div>${outsideMain}</div></div>`;
+    }
+    return `<div class="micro-frame ${hierarchyClass}" style="--micro-gap:${gap}px;--micro-content-width:${contentWidth}%;--micro-sidebar:${values.sidebar}%"><div class="micro-mini-title"><strong>${micro.title}</strong><span>${micro.subtitle}</span></div><div class="micro-mini-body" style="grid-template-columns:${ratio};gap:var(--micro-gap)"><i class="micro-sidebar" ${data('aside')}>${micro.sidebar}</i><div class="micro-main" ${data('main')}><b>${micro.main}</b><p>${micro.paragraph}</p>${cards}</div></div></div>`;
+  }
   const labels = lang === 'zh' ? { course: '构页有方', nav: '课程　案例　笔记　关于', hero: 'Web Layout Fundamentals', intro: '通过层级、间距与结构组织内容。', start: '开始学习', chapters: '章节导航', content: '课程内容', section: '页面布局基础', cardA: '内容关系', cardB: '空间约束', code: 'display: grid; gap: 24px;', footer: 'Footer · Layout with intent' } : { course: 'Layout with Intent', nav: 'Course　Cases　Notes　About', hero: 'Web Layout Fundamentals', intro: 'Organize content through hierarchy, spacing, and structure.', start: 'Start learning', chapters: 'Chapter navigation', content: 'Course content', section: 'Layout foundations', cardA: 'Content relationships', cardB: 'Spatial constraints', code: 'display: grid; gap: 24px;', footer: 'Footer · Layout with intent' };
   const cards = `<div class="lab-cards"><article class="lab-card${selected('card')}" ${data('card')}><b>01</b><strong>${labels.cardA}</strong><span>${lang === 'zh' ? '把内容放入清晰关系' : 'Place content in a clear relation'}</span></article><article class="lab-card" ${data('card')}><b>02</b><strong>${labels.cardB}</strong><span>${lang === 'zh' ? '让空间支持阅读顺序' : 'Let space support reading order'}</span></article></div>`;
   const dimensions = values.device === 'mobile' ? '390 × 844' : values.device === 'tablet' ? '768 × 900' : '1200 × 760';
-  return `<div class="lab-frame-shell device-${values.device}"><div class="lab-frame-meta"><span>FRAME · course-homepage</span><b>${dimensions}</b></div><div class="layout-lab-page ${pageClass}" style="--lab-width:${Math.min(100, (values.width / 1440) * 100)}%;--lab-gap:${values.gap}px;--lab-padding:${values.padding}px;--lab-sidebar:${values.sidebar}%;--lab-density:${values.density}"><header class="lab-page-header${selected('header')}" ${data('header')}><strong>${labels.course}</strong><nav ${data('nav')}>${labels.nav}</nav></header><div class="lab-page-hero${selected('hero')}" ${data('hero')}><span>COURSE / 01</span><h2>${labels.hero}</h2><p>${labels.intro}</p><button>${labels.start} <i>→</i></button></div><div class="lab-page-body" style="${bodyStyle}"><aside class="lab-page-aside${selected('aside')}" style="${sidebarStyle}" ${data('aside')}><span>${labels.chapters}</span><b>Chapter 01</b><b>Chapter 02</b><b>Chapter 03</b></aside><main class="lab-page-main${selected('main')}" ${data('main')}><section class="lab-page-section${selected('section')}" ${data('section')}><span class="lab-section-kicker">${labels.section}</span><h3>${labels.content}</h3><p>${lang === 'zh' ? '一个页面需要先建立结构，再谈视觉层级。' : 'A page needs structure before visual hierarchy.'}</p>${cards}<pre ${data('code')}>${labels.code}</pre></section></main></div><footer class="lab-page-footer${selected('footer')}" ${data('footer')}>${labels.footer}</footer><span class="lab-measure measure-width">↔ ${values.width}px</span><span class="lab-measure measure-gap">${values.gap}px gap</span><span class="lab-measure measure-sidebar">${values.sidebar}%</span></div></div>`;
+  return `<div class="lab-frame-shell device-${values.device}"><div class="lab-frame-meta"><span>FRAME · course-homepage</span><b>${dimensions}</b></div><div class="layout-lab-page ${pageClass}" style="--lab-width:${Math.min(100, (values.width / 1440) * 100)}%;--lab-gap:${values.gap}px;--lab-padding:${values.padding}px;--lab-sidebar:${values.sidebar}%;--lab-density:${values.density}"><header class="lab-page-header${selected('header')}" ${data('header')}><strong>${labels.course}</strong><nav ${data('nav')}>${labels.nav}</nav></header><div class="lab-page-hero${selected('hero')}" ${data('hero')}><span>COURSE / 01</span><h2>${labels.hero}</h2><p>${labels.intro}</p><button>${labels.start} <i>→</i></button></div><div class="lab-page-body" style="${skeletonStyle}"><aside class="lab-page-aside${selected('aside')}" style="${sidebarStyle}" ${data('aside')}><span>${labels.chapters}</span><b>Chapter 01</b><b>Chapter 02</b><b>Chapter 03</b></aside><main class="lab-page-main${selected('main')}" ${data('main')}><section class="lab-page-section${selected('section')}" ${data('section')}><span class="lab-section-kicker">${labels.section}</span><h3>${labels.content}</h3><p>${lang === 'zh' ? '一个页面需要先建立结构，再谈视觉层级。' : 'A page needs structure before visual hierarchy.'}</p>${cards}<pre ${data('code')}>${labels.code}</pre></section></main></div><footer class="lab-page-footer${selected('footer')}" ${data('footer')}>${labels.footer}</footer><span class="lab-measure measure-width">↔ ${values.width}px</span><span class="lab-measure measure-gap">${values.gap}px gap</span><span class="lab-measure measure-sidebar">${values.sidebar}%</span></div></div>`;
 }
 
 function renderLayoutLab(target, sectionId, lastChanged = '') {
   let values = readLabState(sectionId);
+  const expandedWorkspace = target.dataset.expandedWorkspace === 'true';
+  const canvasZoom = target.dataset.canvasZoom || 'fit';
   const zh = lang === 'zh';
   const titles = zh ? ['观察问题', '建立模型', '从内容到页面骨架', 'DOM 结构如何变成页面空间', '验证'] : ['Observe the problem', 'Build the model', 'From content to page skeleton', 'How DOM becomes page space', 'Validate'];
   const insight = () => {
     if (sectionId === 1) return zh ? `当前内容宽度为 ${values.width}px，间距为 ${values.gap}px。${values.width > 1100 ? '行长仍然偏长，尝试收窄阅读宽度。' : '阅读宽度已经更集中，内容组的边界更容易被看见。'}` : `The content width is ${values.width}px with a ${values.gap}px gap. ${values.width > 1100 ? 'The line is still long; try narrowing the reading width.' : 'The reading width is more focused and groups are easier to see.'}`;
-    if (sectionId === 2) return zh ? `当前使用 ${values.mode === 'flow' ? '一维流动' : values.mode === 'align' ? '共享对齐' : values.mode === 'priority' ? '视觉优先级' : '包含关系'} 模式，布局工具正在表达空间关系。` : `The lab is emphasizing ${values.mode}: the layout tool is expressing a spatial relationship.`;
+    if (sectionId === 2) return zh ? `当前关系：${values.containment === 'body' ? 'Demo 与 Main 平级' : 'Demo 属于 Main'}，${values.flow === 'horizontal' ? '横向流动' : '纵向流动'}，${values.alignment === 'center' ? '居中对齐' : values.alignment === 'stretch' ? '拉伸对齐' : '起始对齐'}。页面正在重新表达 ${values.priority === 'demo' ? '演示' : values.priority === 'navigation' ? '导航' : '内容'} 的优先级。` : `Containment is ${values.containment}, flow is ${values.flow}, and alignment is ${values.alignment}. The page is expressing ${values.priority} as the visual priority.`;
     if (sectionId === 3) return zh ? `当前模板为“${values.template === 'single' ? '单栏' : values.template === 'editorial' ? 'Editorial' : values.template === 'two' ? '双栏' : '侧栏'}”，同一组内容被重新组织。` : `The ${values.template} template reorganizes the same content without changing the content itself.`;
     if (sectionId === 4) return zh ? `你选中了 ${values.selected}，display: ${values.display} 正在把 DOM 层级转换为页面空间。` : `${values.selected} is selected. display: ${values.display} is turning DOM hierarchy into page space.`;
     return values.challenge ? (zh ? '很好。当前页面已经形成更清晰的阅读路径。' : 'Nice. The layout now has a clearer reading path.') : zh ? `教学反馈：阅读宽度 ${values.width}px，间距 ${values.gap}px，当前布局密度 ${values.density}/3。` : `Layout feedback: ${values.width}px reading width, ${values.gap}px gap, density ${values.density}/3.`;
@@ -907,7 +1208,16 @@ function renderLayoutLab(target, sectionId, lastChanged = '') {
     { good: values.sidebar <= 38, bad: zh ? '侧栏占比过高' : 'Sidebar ratio is too high', pass: zh ? '主次比例稳定' : 'Content ratio is stable', css: `grid-template-columns: ${values.sidebar}% 1fr`, guide: zh ? '教学建议 20–36%' : 'Teaching range 20–36%' },
     { good: values.alignment !== 'center' || values.selected === 'hero', bad: zh ? '内容对齐关系不稳定' : 'Content alignment is unstable', pass: zh ? '对齐关系明确' : 'Alignment is clear', css: `align-items: ${values.alignment}`, guide: zh ? '根据内容关系判断' : 'Choose from content relationships' }
   ];
-  const renderProblems = () => { const items = getIssues(); return `<div class="lab-problems">${items.map((item) => `<span class="${item.good ? 'is-good' : 'is-warning'}">${item.good ? '✓' : '●'} ${item.good ? item.pass : item.bad}<small>${item.css} · ${item.guide}</small></span>`).join('')}</div><div class="lab-feedback"><span>${zh ? '阅读宽度' : 'Reading width'}<b>${items[0].good ? 'Good' : zh ? '需调整' : 'Review'}</b></span><span>${zh ? '间距' : 'Spacing'}<b>${items[1].good ? 'Good' : zh ? '需调整' : 'Review'}</b></span><span>${zh ? '层级' : 'Hierarchy'}<b>${values.hierarchy >= 2 ? 'Good' : zh ? '需调整' : 'Review'}</b></span></div>`; };
+  const renderProblems = () => {
+    const items = getIssues();
+    if (sectionId === 5) {
+      const density = values.density === 1 ? (zh ? '紧凑' : 'Crowded') : values.density === 3 ? (zh ? '稀疏' : 'Sparse') : (zh ? '平衡' : 'Balanced');
+      const densityGood = values.density === 2;
+      const alignmentGood = values.alignment === 'start';
+      return `<div class="lab-feedback lab-validation-feedback"><span>${zh ? '阅读宽度' : 'Reading width'}<b>${values.width > 1100 ? (zh ? '过宽' : 'Too Wide') : values.width < 760 ? (zh ? '过窄' : 'Too Narrow') : (zh ? '舒适' : 'Comfortable')}</b></span><span>${zh ? '间距' : 'Spacing'}<b>${values.gap < 16 ? (zh ? '紧' : 'Tight') : values.gap > 40 ? (zh ? '松' : 'Loose') : (zh ? '平衡' : 'Balanced')}</b></span><span>${zh ? '对齐' : 'Alignment'}<b>${alignmentGood ? (zh ? '清晰' : 'Clear') : (zh ? '不一致' : 'Inconsistent')}</b></span><span>${zh ? '密度' : 'Density'}<b>${densityGood ? (zh ? '平衡' : 'Balanced') : density}</b></span></div>`;
+    }
+    return `<div class="lab-problems">${items.map((item) => `<span class="${item.good ? 'is-good' : 'is-warning'}">${item.good ? '✓' : '●'} ${item.good ? item.pass : item.bad}<small>${item.css} · ${item.guide}</small></span>`).join('')}</div><div class="lab-feedback"><span>${zh ? '阅读宽度' : 'Reading width'}<b>${items[0].good ? 'Good' : zh ? '需调整' : 'Review'}</b></span><span>${zh ? '间距' : 'Spacing'}<b>${items[1].good ? 'Good' : zh ? '需调整' : 'Review'}</b></span><span>${zh ? '层级' : 'Hierarchy'}<b>${values.hierarchy >= 2 ? 'Good' : zh ? '需调整' : 'Review'}</b></span></div>`;
+  };
   const issueCount = getIssues().filter((item) => !item.good).length;
   const problemList = renderProblems();
   const changeInsight = (key) => {
@@ -916,30 +1226,52 @@ function renderLayoutLab(target, sectionId, lastChanged = '') {
     const baseline = liveCssDescriptor(labDefaults(sectionId), values.selected).lines.find((line) => line.key === key);
     if (!current) return insight();
     const effects = zh ? { width: '正文行长和页面视觉中心随之改变。', gap: '内容组之间的距离被重新计算。', padding: '元素内部的呼吸空间随之改变。', sidebar: '导航与主内容的比例被重新分配。', ratio: '网格轨道的空间比例被重新分配。', display: '浏览器切换了当前布局算法。', alignment: '子元素的对齐基准发生变化。', direction: 'Flex 主轴方向发生变化。', justify: '元素在主轴上的分布方式发生变化。', wrap: '可用空间不足时的换行策略发生变化。' } : { width: 'The reading length and visual center changed.', gap: 'The distance between content groups was recalculated.', padding: 'The internal breathing room changed.', sidebar: 'Space was redistributed between navigation and content.', ratio: 'The grid tracks were redistributed.', display: 'The browser switched layout algorithms.', alignment: 'The alignment reference changed.', direction: 'The Flex main axis changed.', justify: 'Distribution along the main axis changed.', wrap: 'The wrapping strategy changed.' };
-    return `${current.property}: ${baseline?.value || '—'} → ${current.value}. ${effects[key] || (zh ? '页面根据新的 CSS 值重新计算布局。' : 'The page recalculated from the new CSS value.')}`;
+    return `${current.property}: ${baseline?.value || '—'} → ${current.value}. ${effects[key] || (key === 'flow' ? (zh ? '直接子元素的流动方向发生变化。' : 'The flow direction of direct children changed.') : key === 'containment' ? (zh ? '辅助演示的空间归属发生变化。' : 'The spatial ownership of the demo changed.') : key === 'priority' ? (zh ? '页面重新分配了内容、导航和演示的视觉权重。' : 'The page redistributed visual weight across content, navigation, and demo.') : (zh ? '页面根据新的 CSS 值重新计算布局。' : 'The page recalculated from the new CSS value.'))}`;
   };
   const domTree = sectionId === 4 ? `<div class="lab-dom-tree"><strong>DOM tree</strong><button class="${values.selected === 'main' ? 'is-active' : ''}" data-lab-node="main">course-page</button><button class="${values.selected === 'header' ? 'is-active' : ''}" data-lab-node="header">└─ course-header</button><button class="${values.selected === 'aside' ? 'is-active' : ''}" data-lab-node="aside">└─ chapter-nav</button><button class="${values.selected === 'section' ? 'is-active' : ''}" data-lab-node="section">└─ course-content</button><button class="${values.selected === 'card' ? 'is-active' : ''}" data-lab-node="card">　└─ article</button></div>` : '';
   const selectedRoles = zh ? { header: '课程信息', nav: '顶部导航', hero: '视觉入口', aside: '章节导航', main: '内容容器', section: '内容分组', card: '内容单元', code: '代码示例', footer: '页面收束' } : { header: 'Course identity', nav: 'Primary navigation', hero: 'Visual entry', aside: 'Chapter navigation', main: 'Content container', section: 'Content group', card: 'Content unit', code: 'Code sample', footer: 'Page closure' };
   const selectedRole = selectedRoles[values.selected] || (zh ? '页面区域' : 'Page region');
   let experimentControls = '';
-  if (sectionId === 2) experimentControls = labSegment(zh ? '空间关系' : 'Relationship', 'mode', values.mode, [['contain', zh ? '包含' : 'Contain'], ['flow', zh ? '流动' : 'Flow'], ['align', zh ? '对齐' : 'Align'], ['priority', zh ? '优先' : 'Priority']]);
-  if (sectionId === 3) experimentControls = `${labSelect(zh ? '布局模板' : 'Layout template', 'template', values.template, [['single', zh ? '单栏' : 'Single column'], ['sidebar', zh ? '左侧栏' : 'Left sidebar'], ['right', zh ? '右侧栏' : 'Right sidebar'], ['two', zh ? '双栏' : 'Two columns'], ['editorial', 'Editorial']])}${labSegment(zh ? '列数' : 'Columns', 'columns', String(values.columns), [['1', '1'], ['2', '2'], ['3', '3']])}`;
-  if (sectionId === 4) experimentControls = `${domTree}<p class="lab-control-note">${zh ? '点击 DOM 节点或画布区域，观察结构与空间的双向映射。' : 'Click a DOM node or canvas region to inspect their two-way mapping.'}</p>`;
-  if (sectionId === 5) experimentControls = `${labRange(zh ? '内容密度' : 'Density', 'density', values.density, 1, 3, 1, '')}<button class="lab-challenge" type="button" data-lab-action="challenge">${zh ? '生成布局挑战' : 'Generate challenge'}</button>`;
+  if (sectionId === 2) experimentControls = `${labSegment(zh ? '包含关系' : 'Containment', 'containment', values.containment, [['main', zh ? 'Main 内' : 'Inside Main'], ['body', zh ? 'Body 内' : 'Inside Body']])}${labSegment(zh ? '流动关系' : 'Flow', 'flow', values.flow, [['vertical', 'Vertical'], ['horizontal', 'Horizontal']])}${labSegment(zh ? '对齐' : 'Alignment', 'alignment', values.alignment, [['start', 'Start'], ['center', 'Center'], ['stretch', 'Stretch']])}${labSegment(zh ? '优先级' : 'Priority', 'priority', values.priority, [['navigation', 'Navigation'], ['content', 'Content'], ['demo', 'Demo']])}`;
+  if (sectionId === 3) experimentControls = `${labSelect(zh ? '页面骨架' : 'Page skeleton', 'template', values.template, [['single', zh ? '单栏' : 'Single column'], ['sidebar', zh ? '侧栏' : 'Sidebar'], ['two', zh ? '双栏' : 'Two columns'], ['editorial', 'Editorial']])}${labSegment(zh ? '侧栏位置' : 'Sidebar position', 'template', values.template, [['sidebar', 'Left'], ['right', 'Right'], ['single', zh ? '隐藏' : 'Hidden']])}`;
+  if (sectionId === 4) experimentControls = `${domTree}<div class="lab-display-control">${labSegment('DISPLAY', 'display', values.display, [['block', 'Block'], ['flex', 'Flex'], ['grid', 'Grid']])}</div><p class="lab-control-note">${zh ? '点击 DOM 节点或画布区域，观察结构与空间的双向映射。' : 'Click a DOM node or canvas region to inspect their two-way mapping.'}</p>`;
+  if (sectionId === 5) experimentControls = `${labSegment(zh ? '内容密度' : 'Density', 'density', String(values.density), [['1', 'Compact'], ['2', 'Balanced'], ['3', 'Relaxed']])}`;
   const elementLayoutControls = values.selected === 'aside'
     ? `${labRange(zh ? '侧栏宽度' : 'Sidebar width', 'sidebar', values.sidebar, 15, 45, 1, '%')}${sectionId === 3 ? labSegment(zh ? '侧栏位置' : 'Position', 'template', values.template, [['sidebar', zh ? '左' : 'Left'], ['right', zh ? '右' : 'Right'], ['single', zh ? '隐藏' : 'Hidden']]) : ''}`
     : `${labRange(zh ? '内容宽度' : 'Content width', 'width', values.width, 640, 1400, 40)}${values.selected === 'main' ? labRange(zh ? '侧栏比例' : 'Sidebar ratio', 'sidebar', values.sidebar, 15, 45, 1, '%') : ''}`;
   const layoutControls = `${elementLayoutControls}${experimentControls}`;
   const structureControls = `${labSegment('DISPLAY', 'display', values.display, [['block', 'Block'], ['flex', 'Flex'], ['grid', 'Grid']])}${values.display === 'grid' ? labSelect(zh ? '网格列' : 'Grid columns', 'ratio', values.ratio, [['custom', zh ? '侧栏比例' : 'Sidebar ratio'], ['1:1', '1fr 1fr'], ['1:2', '1fr 2fr'], ['2:1', '2fr 1fr'], ['1:3', '1fr 3fr'], ['fixed', '240px 1fr']]) : ''}${values.display === 'flex' ? `${labSegment(zh ? '方向' : 'Direction', 'direction', values.direction, [['row', 'Row'], ['column', 'Column']])}${labSelect(zh ? '主轴分布' : 'Justify', 'justify', values.justify, [['start', 'Start'], ['center', 'Center'], ['space-between', 'Space-between']])}${labSegment(zh ? '换行' : 'Wrap', 'wrap', values.wrap, [['nowrap', 'Off'], ['wrap', 'On']])}` : ''}`;
   const boxModel = `<div class="lab-box-model" aria-label="Box model"><span>margin</span><div><span>border</span><div><span>padding ${values.padding}px</span><b>content</b></div></div></div>`;
-  const controls = `${labGroup('LAYOUT', zh ? '布局' : 'Layout', layoutControls)}${labGroup('SPACING', zh ? '间距' : 'Spacing', `${labRange('Gap', 'gap', values.gap, 4, 64, 4)}${labRange('Padding', 'padding', values.padding, 8, 72, 4)}${boxModel}`)}${labGroup('STRUCTURE', zh ? '结构' : 'Structure', structureControls)}${labGroup('ALIGNMENT', zh ? '对齐' : 'Alignment', labSegment(zh ? '元素对齐' : 'Item alignment', 'alignment', values.alignment, [['start', 'Start'], ['center', 'Center'], ['stretch', 'Stretch']]))}${labGroup('HIERARCHY', zh ? '层级' : 'Hierarchy', labRange(zh ? '视觉层级' : 'Visual level', 'hierarchy', values.hierarchy, 1, 3, 1, ''))}${labGroup('ISSUES', zh ? '问题与反馈' : 'Issues and feedback', `<div data-lab-issues>${problemList}</div>`)}`;
+  const commonSpacing = labGroup('SPACING', zh ? '间距' : 'Spacing', `${labRange('Gap', 'gap', values.gap, 4, 64, 4)}${labRange('Padding', 'padding', values.padding, 8, 72, 4)}${boxModel}`);
+  const alignmentGroup = labGroup('ALIGNMENT', zh ? '对齐' : 'Alignment', labSegment(zh ? '元素对齐' : 'Item alignment', 'alignment', values.alignment, [['start', 'Start'], ['center', 'Center'], ['stretch', 'Stretch']]));
+  const structureGroup = labGroup('STRUCTURE', zh ? '结构' : 'Structure', structureControls);
+  const controlsBySection = {
+    1: labGroup('LAYOUT DIAGNOSIS', zh ? '布局诊断' : 'Layout diagnosis', `${labRange(zh ? '正文宽度' : 'Content width', 'width', values.width, 680, 1180, 40)}${labRange(zh ? '区块间距' : 'Section gap', 'gap', values.gap, 8, 56, 4)}${labRange(zh ? '侧栏比例' : 'Sidebar ratio', 'sidebar', values.sidebar, 20, 40, 1, '%')}${labSegment(zh ? '视觉层级' : 'Hierarchy', 'hierarchy', String(values.hierarchy), [['1', 'Low'], ['2', 'Balanced'], ['3', 'Strong']])}`),
+    2: labGroup('RELATION BUILDER', zh ? '关系建模器' : 'Relation builder', experimentControls),
+    3: labGroup('SKELETON SWITCHER', zh ? '页面骨架实验' : 'Skeleton switcher', experimentControls),
+    4: labGroup('DOM TO SPACE', zh ? '结构映射实验' : 'DOM to space', experimentControls),
+    5: labGroup('LAYOUT VALIDATION', zh ? '布局验证' : 'Layout validation', `${labRange(zh ? '阅读宽度' : 'Reading width', 'width', values.width, 680, 1180, 40)}${labRange('Gap', 'gap', values.gap, 8, 56, 4)}${alignmentGroup}${experimentControls}`)
+  };
+  const feedbackGroup = [1, 5].includes(sectionId) ? labGroup('WHAT CHANGED', zh ? '变化反馈' : 'What changed', `<div data-lab-issues>${problemList}</div>`) : '';
+  const controls = `${controlsBySection[sectionId]}${feedbackGroup}`;
   const beforeValues = { ...labDefaults(sectionId), width: 1180, gap: 8, sidebar: 38, padding: 12, template: 'single', display: 'block' };
   const pageMarkup = () => { const currentPage = labMiniPage(values, sectionId, true); return values.compare ? `<div class="lab-compare"><div><span>BEFORE / ${zh ? '原始布局' : 'Original'}</span>${labMiniPage(beforeValues, sectionId, false, true)}</div><div><span>AFTER / ${zh ? '当前布局' : 'Current'}</span>${currentPage}</div></div>` : currentPage; };
   const page = pageMarkup();
-  const task = zh ? '让正文更容易阅读，同时保持章节导航清晰。' : 'Improve reading comfort while keeping chapter navigation clear.';
-  const why = zh ? '稳定的阅读宽度、间距和主次比例，会帮助用户更快建立清晰的阅读路径。' : 'Stable reading width, spacing, and hierarchy help readers form a clearer path through the page.';
-  target.innerHTML = `<div class="layout-lab"><div class="layout-lab-toolbar"><div class="workshop-title"><span>LAYOUT WORKSHOP</span><strong>${zh ? '构页工坊' : 'Layout Workshop'}</strong><small>EXPERIMENT · ${titles[sectionId - 1]}</small></div><div class="workshop-actions"><span class="lab-reset-note" aria-live="polite"></span><button type="button" class="${values.compare ? 'is-active' : ''}" data-lab-action="compare">${zh ? '对比' : 'Compare'}</button><button type="button" data-lab-action="reset">↺ ${ui[lang].reset}</button></div></div><div class="lab-statusbar"><span>EXPERIMENT STATUS</span><b>${values.selected.toUpperCase()} · ${values.display.toUpperCase()} · ${issueCount} ${zh ? '项待观察' : issueCount === 1 ? 'issue' : 'issues'}</b><i class="${issueCount === 0 ? 'is-reached' : ''}">${issueCount === 0 ? '✓ ' + (zh ? '目标已达成' : 'Goal reached') : 'TASK · ' + task}</i></div><div class="layout-lab-workspace"><aside class="layout-lab-controls"><div class="lab-selected"><i></i><div><span>SELECTED ELEMENT</span><strong>${values.selected.toUpperCase()}</strong><small>display: ${values.display} · role: ${selectedRole}</small></div></div>${controls}</aside><div class="layout-lab-main"><div class="layout-lab-stage"><div class="lab-canvas-toolbar"><span>${zh ? '预览' : 'Preview'}</span><b>100%</b><div class="lab-device-switch">${[['desktop', zh ? '桌面' : 'Desktop'], ['tablet', zh ? '平板' : 'Tablet'], ['mobile', zh ? '手机' : 'Mobile']].map(([value, label]) => `<button type="button" class="${values.device === value ? 'is-active' : ''}" data-lab-choice="device" data-value="${value}">${label}</button>`).join('')}</div><label><input type="checkbox" data-lab-toggle="grid"${values.grid ? ' checked' : ''}> ${zh ? '网格' : 'Grid'}</label><label><input type="checkbox" data-lab-toggle="guides"${values.guides ? ' checked' : ''}> ${zh ? '边界' : 'Bounds'}</label><label><input type="checkbox" data-lab-toggle="measurements"${values.measurements ? ' checked' : ''}> ${zh ? '测量' : 'Measure'}</label></div><div class="lab-canvas-content">${page}</div></div><div class="lab-lower-panels"><div class="lab-live-code-host">${renderLiveCss(values, sectionId, lastChanged)}</div><div class="layout-lab-insight"><div><span>INSIGHT / ${zh ? '发生了什么' : 'WHAT CHANGED?'}</span><strong>${changeInsight(lastChanged)}</strong></div><div><span>WHY IT MATTERS</span><p>${why}</p></div></div></div></div></div></div>`;
-  const update = (key, value) => { values[key] = value; if (key === 'sidebar') values.ratio = 'custom'; saveLabState(sectionId, values); renderLayoutLab(target, sectionId, key); };
+  const demoNames = zh ? ['LAYOUT DIAGNOSIS', 'RELATION BUILDER', 'SKELETON SWITCHER', 'DOM TO SPACE', 'LAYOUT VALIDATION'] : ['LAYOUT DIAGNOSIS', 'RELATION BUILDER', 'SKELETON SWITCHER', 'DOM TO SPACE', 'LAYOUT VALIDATION'];
+  const tasks = zh ? ['让正文更易读，同时避免侧栏抢占视觉中心。', '调整内容关系，让主次和包含关系变得清楚。', '为当前内容选择更合理的页面骨架。', '保持 DOM 不变，观察不同 display 如何改变页面空间。', '调整页面并通过可观察指标判断是否真的改善。'] : ['Make the body easier to read without letting the sidebar dominate.', 'Clarify containment and priority by changing content relationships.', 'Choose a more suitable page skeleton for the same content.', 'Keep the DOM unchanged and observe how display changes page space.', 'Adjust the page and use observable indicators to judge improvement.'];
+  const whyBySection = zh ? ['正文宽度、区块间距和侧栏比例共同决定阅读中心。', '关系决定职责；职责清楚后，布局工具才有明确含义。', '同样内容换一副骨架，阅读路径也会随之改变。', 'DOM 保持不变，父容器的布局上下文决定空间结果。', '只有能解释宽度、间距和对齐的变化，才算验证。'] : ['Reading width, section gaps, and sidebar ratio shape the reading center.', 'Relationships define responsibility before a layout tool gives it space.', 'The same content can produce a different path when its skeleton changes.', 'With the DOM unchanged, the parent layout context determines the spatial result.', 'A change is validated when its width, spacing, and alignment effects are explainable.'];
+  const task = tasks[sectionId - 1];
+  const why = whyBySection[sectionId - 1];
+  target.innerHTML = `<div class="layout-lab"><div class="layout-lab-toolbar"><div class="workshop-title"><span>${demoNames[sectionId - 1]}</span><strong>${zh ? '构页工坊' : 'Layout Workshop'}</strong><small>EXPERIMENT · ${titles[sectionId - 1]}</small></div><div class="workshop-actions"><span class="lab-reset-note" aria-live="polite"></span><button type="button" class="${values.compare ? 'is-active' : ''}" data-lab-action="compare">${zh ? '对比' : 'Compare'}</button><button type="button" data-lab-action="reset">↺ ${ui[lang].reset}</button></div></div><div class="lab-statusbar"><span>EXPERIMENT STATUS</span><b>${values.selected.toUpperCase()} · ${values.display.toUpperCase()} · ${issueCount} ${zh ? '项待观察' : issueCount === 1 ? 'issue' : 'issues'}</b><i class="${issueCount === 0 ? 'is-reached' : ''}">${issueCount === 0 ? '✓ ' + (zh ? '目标已达成' : 'Goal reached') : 'TASK · ' + task}</i></div><div class="layout-lab-workspace"><aside class="layout-lab-controls"><div class="lab-selected"><i></i><div><span>SELECTED ELEMENT</span><strong>${values.selected.toUpperCase()}</strong><small>display: ${values.display} · role: ${selectedRole}</small></div></div>${controls}</aside><div class="layout-lab-main"><div class="layout-lab-stage"><div class="lab-canvas-toolbar"><span>${zh ? '预览' : 'Preview'}</span><b>100%</b><div class="lab-device-switch">${[['desktop', zh ? '桌面' : 'Desktop'], ['tablet', zh ? '平板' : 'Tablet'], ['mobile', zh ? '手机' : 'Mobile']].map(([value, label]) => `<button type="button" class="${values.device === value ? 'is-active' : ''}" data-lab-choice="device" data-value="${value}">${label}</button>`).join('')}</div><label><input type="checkbox" data-lab-toggle="grid"${values.grid ? ' checked' : ''}> ${zh ? '网格' : 'Grid'}</label><label><input type="checkbox" data-lab-toggle="guides"${values.guides ? ' checked' : ''}> ${zh ? '边界' : 'Bounds'}</label><label><input type="checkbox" data-lab-toggle="measurements"${values.measurements ? ' checked' : ''}> ${zh ? '测量' : 'Measure'}</label></div><div class="lab-canvas-content">${page}</div></div><div class="lab-lower-panels"><div class="lab-live-code-host">${renderLiveCss(values, sectionId, lastChanged)}</div><div class="layout-lab-insight"><div><span>INSIGHT / ${zh ? '发生了什么' : 'WHAT CHANGED?'}</span><strong>${changeInsight(lastChanged)}</strong></div><div><span>WHY IT MATTERS</span><p>${why}</p></div></div></div></div></div></div>`;
+  const labRoot = target.querySelector('.layout-lab');
+  labRoot?.classList.toggle('is-expanded', expandedWorkspace);
+  labRoot?.classList.toggle('is-micro-lab', sectionId >= 1 && sectionId <= 5);
+  labRoot?.classList.remove('is-zoom-fit', 'is-zoom-75', 'is-zoom-100');
+  labRoot?.classList.add(`is-zoom-${canvasZoom}`);
+  target.querySelector('.workshop-actions')?.insertAdjacentHTML('afterbegin', `<button type="button" class="workspace-expand-button" data-lab-action="workspace">${expandedWorkspace ? (zh ? '退出全局模式 ×' : 'Exit Focus Mode ×') : (zh ? '全局模式 ↗' : 'Expand Workspace ↗')}</button>`);
+  target.querySelector('.lab-device-switch')?.remove();
+  target.querySelector('.lab-canvas-toolbar')?.insertAdjacentHTML('beforeend', `<div class="lab-zoom-switch" aria-label="${zh ? '画布缩放' : 'Canvas zoom'}"><span>${zh ? '缩放' : 'Zoom'}</span>${[['fit', 'Fit'], ['75', '75%'], ['100', '100%']].map(([value, label]) => `<button type="button" class="${canvasZoom === value ? 'is-active' : ''}" data-lab-zoom="${value}">${label}</button>`).join('')}</div>`);
+  const update = (key, value) => { values[key] = value; if (key === 'sidebar') values.ratio = 'custom'; if (sectionId === 2 && key === 'flow') values.display = value === 'horizontal' ? 'flex' : 'grid'; saveLabState(sectionId, values); renderLayoutLab(target, sectionId, key); };
   const setLinked = (key, active) => {
     if (!key) return;
     const root = target.querySelector('.layout-lab');
@@ -950,6 +1282,12 @@ function renderLayoutLab(target, sectionId, lastChanged = '') {
     });
   };
   const bindCanvas = () => target.querySelectorAll('[data-lab-area]').forEach((area) => area.addEventListener('click', (event) => { event.preventDefault(); event.stopPropagation(); update('selected', area.dataset.labArea); }));
+  const bindDomPreview = () => target.querySelectorAll('.micro-dom-tree span').forEach((node) => {
+    const text = node.textContent || '';
+    const key = text.includes('header') ? 'header' : text.includes('aside') ? 'aside' : text.includes('section') ? 'section' : text.includes('article') ? 'card' : 'main';
+    node.classList.toggle('is-active', values.selected === key);
+    node.addEventListener('click', () => update('selected', key));
+  });
   const bindLiveCode = () => {
     target.querySelectorAll('[data-code-key]').forEach((line) => {
       line.addEventListener('mouseenter', () => setLinked(line.dataset.codeKey, true));
@@ -976,7 +1314,7 @@ function renderLayoutLab(target, sectionId, lastChanged = '') {
     if (taskStatus) { taskStatus.classList.toggle('is-reached', currentIssueCount === 0); taskStatus.textContent = currentIssueCount === 0 ? `✓ ${zh ? '目标已达成' : 'Goal reached'}` : `TASK · ${task}`; }
     const insightText = target.querySelector('.layout-lab-insight strong');
     if (insightText) insightText.textContent = changeInsight(key);
-    bindCanvas(); bindLiveCode();
+    bindCanvas(); bindDomPreview(); bindLiveCode();
   };
   target.querySelectorAll('[data-lab-control]').forEach((input) => {
     const key = input.dataset.labControl;
@@ -1001,15 +1339,199 @@ function renderLayoutLab(target, sectionId, lastChanged = '') {
   });
   target.querySelectorAll('[data-lab-choice]').forEach((input) => input.addEventListener('click', () => update(input.dataset.labChoice, input.dataset.value === '1' || input.dataset.value === '2' || input.dataset.value === '3' ? Number(input.dataset.value) : input.dataset.value)));
   target.querySelectorAll('[data-lab-toggle]').forEach((input) => input.addEventListener('change', () => update(input.dataset.labToggle, input.checked)));
+  target.querySelectorAll('[data-lab-zoom]').forEach((button) => button.addEventListener('click', () => {
+    const zoom = button.dataset.labZoom;
+    target.dataset.canvasZoom = zoom;
+    const root = target.querySelector('.layout-lab');
+    root?.classList.remove('is-zoom-fit', 'is-zoom-75', 'is-zoom-100');
+    root?.classList.add(`is-zoom-${zoom}`);
+    target.querySelectorAll('[data-lab-zoom]').forEach((item) => item.classList.toggle('is-active', item === button));
+  }));
   target.querySelectorAll('[data-property-key]').forEach((control) => {
     control.addEventListener('mouseenter', () => setLinked(control.dataset.propertyKey, true));
     control.addEventListener('mouseleave', () => setLinked(control.dataset.propertyKey, false));
   });
-  bindCanvas(); bindLiveCode();
+  bindCanvas(); bindDomPreview(); bindLiveCode();
   target.querySelectorAll('[data-lab-node]').forEach((node) => node.addEventListener('click', () => update('selected', node.dataset.labNode)));
   target.querySelector('[data-lab-action="compare"]')?.addEventListener('click', () => update('compare', !values.compare));
+  target.querySelector('[data-lab-action="workspace"]')?.addEventListener('click', () => { window.location.href = `${document.body.dataset.root || '../'}workshop/chapter-01.html?from=${sectionId}`; });
   target.querySelector('[data-lab-action="reset"]')?.addEventListener('click', () => { values = labDefaults(sectionId); saveLabState(sectionId, values); renderLayoutLab(target, sectionId); const note = target.querySelector('.lab-reset-note'); if (note) { note.textContent = zh ? '已恢复实验默认值' : 'Reset to experiment defaults'; note.classList.add('is-visible'); setTimeout(() => note.classList.remove('is-visible'), 1800); } });
   target.querySelector('[data-lab-action="challenge"]')?.addEventListener('click', () => { values = { ...values, challenge: true, width: 1320, gap: 8, sidebar: 40, padding: 12, density: 3 }; saveLabState(sectionId, values); renderLayoutLab(target, sectionId); });
+}
+
+function renderGlobalWorkspace() {
+  const chapterId = Number(document.body.dataset.chapter || 1);
+  const fromSection = Math.min(5, Math.max(1, Number(new URLSearchParams(location.search).get('from') || 1)));
+  const sectionId = fromSection;
+  const section = chapterOneSections.find((item) => item.id === sectionId) || chapterOneSections[0];
+  const zh = lang === 'zh';
+  let values = mergeSectionIntoWorkspace(chapterId, sectionId);
+  values = { ...values, cardSpan: Number(values.cardSpan || 1), selected: null };
+  if (Number(values.width || 0) < 1280) { values.width = 1360; saveChapterWorkspaceState(chapterId, values); }
+  const defaults = chapterWorkspaceDefaults(chapterId);
+  let undoStack = [];
+  let redoStack = [];
+  let activeTool = 'select';
+  let editorMode = 'select';
+  let gridVisible = false;
+  let boundsVisible = false;
+  let focusedIssue = null;
+  let disposeElementEditor = () => {};
+  let selectedNodeId = null;
+  let dragStart = null;
+  const clamp = (value, min, max) => Math.min(max, Math.max(min, Math.round(value)));
+  const title = zh ? ['观察问题', '建立模型', '页面骨架', 'DOM 与页面空间', '验证'][sectionId - 1] : ['Observe the problem', 'Build the model', 'Page skeleton', 'DOM & page space', 'Validate'][sectionId - 1];
+  const tool = zh ? ['布局诊断', '关系模型', '页面结构', 'DOM 映射', '验证反馈'][sectionId - 1] : ['Layout diagnosis', 'Relations', 'Structure', 'DOM mapping', 'Validation'][sectionId - 1];
+  const labels = { header: zh ? '课程信息' : 'Course identity', hero: zh ? '课程引导' : 'Course introduction', aside: zh ? '章节导航' : 'Chapter navigation', main: zh ? '主内容' : 'Main content', principle: zh ? '核心原则' : 'Principle', relation: zh ? '关系模型' : 'Relation model', content: zh ? '学习内容' : 'Learning content', card: zh ? '内容卡片' : 'Content card', demo: zh ? '动态演示' : 'Interactive demo', notes: zh ? '学习笔记' : 'Learning notes', footer: zh ? '页面收束' : 'Page footer' };
+  const pageCopy = zh ? {
+    brand: '构页有方', progress: '学习进度', course: '课程', cases: '案例', notes: '笔记', about: '关于', chapter: '第一章 · 布局的本质', completed: '已完成', observe: '观察问题', model: '建立模型', skeleton: '页面骨架', domSpace: 'DOM 与页面空间', validate: '验证', complete: '完成', heroKicker: 'COURSE / CHAPTER 01', heroTitle: '理解页面布局的真正逻辑', heroText: '不从 CSS 属性开始，而从内容关系和页面空间开始。', start: '开始学习 →', principle: '先理解内容关系，再决定空间结构。', principleText: '谁包含谁？谁先被看到？哪些区域应该共享同一条边界？', relationKicker: 'RELATION MODEL · 内容关系 → 页面空间', contain: '包含关系', belong: '谁属于谁', flow: '流动关系', appear: '谁先出现', align: '对齐关系', boundary: '共享边界', priority: '优先级', first: '先看什么', learningKicker: 'LEARNING CONTENT · 学习内容', learningIntro: '从一个拥挤的课程页面开始，逐步建立布局判断方法。', contentKicker: 'INTRO · CONTENT SECTION', contentTitle: '从内容关系到页面骨架', contentText1: '稳定的容器、清晰的层级和可解释的空间关系，让页面更容易被阅读。', contentText2: '当正文过宽、侧栏过重、区块间距过紧时，问题通常来自关系，而不是某一个装饰属性。', card1: '观察问题', card1Text: '阅读宽度、间距与视觉中心', card2: '建立模型', card2Text: '包含、流动、对齐与优先级', card3: '验证布局', card3Text: '用变化解释视觉结果', relationCard: '内容关系', relationCardText: '把内容放入清晰关系', spaceCard: '空间约束', spaceCardText: '让空间支持阅读顺序', demoKicker: 'DEMO AREA · 动态演示', demoTitle: '观察参数如何改变空间', demoText: '调整宽度、间距和侧栏比例，观察布局关系如何重新分配。', notesKicker: 'LEARNING NOTES · VALIDATION', comfortable: '舒适', tooWide: '过宽', good: '良好', tight: '偏紧', needs: '需要改进', insightText: '好的布局判断，应该能通过变化解释，而不是只靠感觉。', nextKicker: 'NEXT SECTION', nextText: '下一节：从内容到页面骨架 →', footer: '构页有方', footerText: 'Layout with intent · Chapter 01'
+  } : {
+    brand: 'Layout with Intent', progress: 'Progress', course: 'Course', cases: 'Cases', notes: 'Notes', about: 'About', chapter: 'Chapter 01 · The Nature of Layout', completed: 'Completed', observe: 'Observe the problem', model: 'Build the model', skeleton: 'Page skeleton', domSpace: 'DOM & page space', validate: 'Validate', complete: 'complete', heroKicker: 'COURSE / CHAPTER 01', heroTitle: 'Understand the logic behind page layout', heroText: 'Start with content relationships and page space—not isolated CSS properties.', start: 'Start learning →', principle: 'Understand content relationships before deciding the spatial structure.', principleText: 'What contains what? What comes first? Which areas should share an edge?', relationKicker: 'RELATION MODEL · Content relationships → page space', contain: 'Containment', belong: 'Who belongs where', flow: 'Flow', appear: 'What comes first', align: 'Alignment', boundary: 'Shared edge', priority: 'Priority', first: 'What to read first', learningKicker: 'LEARNING CONTENT · Learning content', learningIntro: 'Start with a crowded course page and build a method for judging layout.', contentKicker: 'INTRO · CONTENT SECTION', contentTitle: 'From content relationships to page structure', contentText1: 'Stable containers, clear hierarchy, and explainable spatial relationships make a page easier to read.', contentText2: 'When reading width is excessive, the sidebar dominates, or section gaps are tight, the cause is usually relational rather than decorative.', card1: 'Observe the problem', card1Text: 'Reading width, spacing, and visual focus', card2: 'Build the model', card2Text: 'Containment, flow, alignment, and priority', card3: 'Validate the layout', card3Text: 'Explain visual results through change', relationCard: 'Content relationships', relationCardText: 'Place content in clear relationships', spaceCard: 'Spatial constraints', spaceCardText: 'Let space support reading order', demoKicker: 'DEMO AREA · Interactive demo', demoTitle: 'See how parameters reshape space', demoText: 'Adjust width, spacing, and sidebar proportion to observe how layout relationships redistribute.', notesKicker: 'LEARNING NOTES · VALIDATION', comfortable: 'Comfortable', tooWide: 'Too Wide', good: 'Good', tight: 'Tight', needs: 'Needs improvement', insightText: 'Good layout judgment should be explainable through change, not only intuition.', nextKicker: 'NEXT SECTION', nextText: 'Next: From content to page structure →', footer: 'Layout with Intent', footerText: 'Layout with intent · Chapter 01'
+  };
+  const snapshot = () => JSON.stringify(values);
+  const commit = () => { undoStack.push(snapshot()); redoStack = []; saveChapterWorkspaceState(chapterId, values); };
+  const cssText = () => `.course-page {\n  max-width: ${values.width}px;\n}\n\n.course-body {\n  display: grid;\n  grid-template-columns: ${values.sidebar}% 1fr;\n  gap: ${values.gap}px;\n  padding: ${values.padding}px;\n}\n\n.course-content { row-gap: ${values.sectionGap || 28}px; }\n.demo-area { width: ${values.demoWidth || 100}%; }`;
+  const insight = () => {
+    if (values.lastChanged === 'sidebar') return zh ? `侧栏占比提高到 ${values.sidebar}%，导航获得更多空间，但主内容阅读宽度随之减少。` : `The sidebar now takes ${values.sidebar}%, giving navigation more room while reducing reading width.`;
+    if (values.lastChanged === 'gap') return zh ? `卡片间距调整为 ${values.gap}px，内容分组的边界更容易被识别。` : `The card gap is ${values.gap}px, making the grouping boundary easier to read.`;
+    if (values.lastChanged === 'width') return zh ? `页面最大宽度为 ${values.width}px，页面中心保持对齐。` : `The page max-width is ${values.width}px and remains centered.`;
+    if (values.lastChanged === 'cardSpan') return values.cardSpan === 2 ? (zh ? '第一张卡片跨越两列，获得更强的内容权重。' : 'The first card spans two columns and gains more visual weight.') : (zh ? '卡片恢复为单列跨度，网格关系更均衡。' : 'The card returns to one column for a more balanced grid.');
+    return zh ? '直接拖动页面边界，观察布局参数与 CSS 如何同步变化。' : 'Drag the page boundaries and watch the layout parameters and CSS respond.';
+  };
+  const toolPanel = () => {
+    const selected = values.selected || 'main';
+    const selectedName = labels[selected] || labels.main;
+    if (activeTool === 'diagnosis') return `<section class="global-dock-section global-tool-panel"><span>DIAGNOSIS PANEL · 当前问题</span><div class="global-panel-list"><button type="button" data-global-issue="reading" class="${focusedIssue === 'reading' ? 'is-active' : ''}"><b>Reading Width</b><small>${values.width > 1100 ? 'Too Wide' : 'Comfortable'}</small></button><button type="button" data-global-issue="sidebar" class="${focusedIssue === 'sidebar' ? 'is-active' : ''}"><b>Sidebar Weight</b><small>${values.sidebar > 32 ? 'Too Strong' : 'Balanced'}</small></button><button type="button" data-global-issue="spacing" class="${focusedIssue === 'spacing' ? 'is-active' : ''}"><b>Spacing</b><small>${values.gap < 16 ? 'Too Tight' : 'Balanced'}</small></button><button type="button" data-global-issue="hierarchy" class="${focusedIssue === 'hierarchy' ? 'is-active' : ''}"><b>Hierarchy</b><small>${values.hierarchy >= 2 ? 'Clear' : 'Weak'}</small></button></div></section>`;
+    if (activeTool === 'relations') return `<section class="global-dock-section global-tool-panel"><span>RELATIONS PANEL · 当前元素</span><dl class="global-inspector-facts"><div><dt>Selected</dt><dd>${selectedName}</dd></div><div><dt>Parent</dt><dd>.course-body</dd></div><div><dt>Sibling</dt><dd>${selected === 'aside' ? 'main.course-content' : 'aside.chapter-nav'}</dd></div><div><dt>Priority</dt><dd>${selected === 'aside' ? 'Secondary' : 'Primary'}</dd></div></dl></section>`;
+    if (activeTool === 'structure') return `<section class="global-dock-section global-tool-panel"><span>STRUCTURE PANEL · 布局骨架</span><dl class="global-inspector-facts"><div><dt>Selected</dt><dd>${selectedName}</dd></div><div><dt>Display</dt><dd>grid</dd></div><div><dt>Columns</dt><dd>${values.sidebar}% · 1fr</dd></div><div><dt>Gap</dt><dd>${values.gap}px</dd></div></dl></section>`;
+    if (activeTool === 'dom') return `<section class="global-dock-section global-tool-panel global-dom-panel"><span>DOM PANEL · 结构映射</span><div class="global-dom-tree"><button type="button" data-global-dom-select="header" class="${selected === 'header' ? 'is-active' : ''}">header.course-header</button><button type="button" data-global-dom-select="aside" class="${selected === 'aside' ? 'is-active' : ''}">aside.chapter-nav</button><button type="button" data-global-dom-select="main" class="${selected === 'main' ? 'is-active' : ''}">main.course-content</button><button type="button" data-global-dom-select="relation" class="${selected === 'relation' ? 'is-active' : ''}">└─ section.relation-model</button><button type="button" data-global-dom-select="content" class="${selected === 'content' ? 'is-active' : ''}">└─ section.learning-points</button><button type="button" data-global-dom-select="demo" class="${selected === 'demo' ? 'is-active' : ''}">└─ section.demo</button><button type="button" data-global-dom-select="footer" class="${selected === 'footer' ? 'is-active' : ''}">footer.course-footer</button></div></section>`;
+    return `<section class="global-dock-section global-tool-panel"><span>VALIDATION PANEL · 教学反馈</span><div class="global-panel-list"><button type="button" data-global-validation="reading"><b>Reading Width</b><small>${values.width > 1100 ? 'Too Wide' : 'Comfortable'} · 当前 ${values.width}px</small></button><button type="button" data-global-validation="spacing"><b>Spacing</b><small>${values.gap < 16 ? 'Tight' : 'Balanced'} · gap ${values.gap}px</small></button><button type="button" data-global-validation="alignment"><b>Alignment</b><small>${values.alignment === 'center' ? 'Mixed' : 'Consistent'}</small></button><button type="button" data-global-validation="hierarchy"><b>Hierarchy</b><small>${values.hierarchy >= 2 ? 'Clear' : 'Weak'}</small></button></div></section>`;
+  };
+  const render = () => {
+  disposeElementEditor();
+  document.querySelector('#app').innerHTML = `<main class="global-workspace-page"><header class="global-toolbar"><div><span class="eyebrow">GLOBAL WORKSPACE</span><h1>${zh ? '构页工坊' : 'Layout Workshop'}</h1><p>${zh ? '拖动页面，观察 CSS 如何响应。' : 'Drag the layout. Watch the CSS respond.'}</p></div><div class="global-toolbar-actions"><a class="global-return" href="../chapters/chapter-01-section-0${sectionId}.html">← ${zh ? '返回课程' : 'Back to course'}</a><button type="button" data-global-action="undo" ${undoStack.length ? '' : 'disabled'}>↶ ${zh ? '撤销' : 'Undo'}</button><button type="button" data-global-action="redo" ${redoStack.length ? '' : 'disabled'}>↷ ${zh ? '重做' : 'Redo'}</button><button type="button" data-global-action="compare" class="${values.compare ? 'is-active' : ''}">${zh ? '对比' : 'Compare'}</button><button type="button" data-global-action="reset">↺ ${zh ? '重置' : 'Reset'}</button></div></header><section class="global-workspace"><div class="global-context"><span>CHAPTER 01 / SECTION 0${sectionId}</span><b>${esc(title)}</b><small>${zh ? 'Visual → CSS → Parameter' : 'Visual → CSS → Parameter'}</small></div><div class="global-canvas-shell"><div class="global-canvas-toolbar"><span>CANVAS</span><span>GRID · BOUNDS · SNAP</span><b>${values.width}px frame</b></div><div class="global-canvas"><div class="global-page-frame ${values.compare ? 'is-comparing' : ''}" style="--global-page-width:${Math.min(100, values.width / 14.4)}%;--global-sidebar:${values.sidebar}%;--global-gap:${values.gap}px;--global-padding:${values.padding}px;--global-card-span:${values.cardSpan}"><button class="global-select global-header ${values.selected === 'header' ? 'is-selected' : ''}" data-global-select="header"><span>HEADER</span><strong>${labels.header}</strong></button><div class="global-body"><button class="global-select global-aside ${values.selected === 'aside' ? 'is-selected' : ''}" data-global-select="aside"><span>ASIDE</span><strong>${labels.aside}</strong><i class="global-resize-handle handle-sidebar" data-global-drag="sidebar" title="${zh ? '拖动调整侧栏比例' : 'Drag sidebar ratio'}"></i></button><main class="global-select global-main ${values.selected === 'main' ? 'is-selected' : ''}" data-global-select="main"><span>MAIN CONTENT</span><strong>${labels.main}</strong><div class="global-card-grid"><button class="global-select global-card ${values.selected === 'card' ? 'is-selected' : ''}" data-global-select="card"><span>CARD 01</span><strong>${zh ? '内容关系' : 'Content relationships'}</strong><i class="global-resize-handle handle-card" data-global-drag="cardSpan" title="${zh ? '拖动调整卡片跨度' : 'Drag to change card span'}"></i></button><button class="global-select global-card" data-global-select="card"><span>CARD 02</span><strong>${zh ? '空间约束' : 'Spatial constraints'}</strong></button><i class="global-resize-handle handle-gap" data-global-drag="gap" title="${zh ? '拖动调整卡片间距' : 'Drag to change gap'}"></i></div></main></div><i class="global-resize-handle handle-width" data-global-drag="width" title="${zh ? '拖动调整页面宽度' : 'Drag to resize content width'}"></i><span class="global-measure global-measure-value">${values.lastChanged ? (values.lastChanged === 'sidebar' ? `${values.sidebar}%` : values.lastChanged === 'gap' ? `${values.gap}px` : values.lastChanged === 'cardSpan' ? `span ${values.cardSpan}` : `${values.width}px`) : 'DRAG TO EDIT'}</span></div></div></div><aside class="global-dock"><section class="global-dock-section global-selected-readout"><span>SELECTED ELEMENT</span><strong>${(values.selected || 'main').toUpperCase()}</strong><small>${labels[values.selected] || labels.main}</small></section>${toolPanel()}<section class="global-dock-section"><span>SIZE</span><label>Width <input type="number" min="720" max="1440" value="${values.width}" data-global-input="width"> px</label><label>Padding <input type="number" min="8" max="72" value="${values.padding}" data-global-input="padding"> px</label></section><section class="global-dock-section"><span>SPACING</span><label>Gap <input type="number" min="4" max="64" value="${values.gap}" data-global-input="gap"> px</label><label>Sidebar <input type="number" min="15" max="45" value="${values.sidebar}" data-global-input="sidebar"> %</label></section><section class="global-dock-section global-css"><span>LIVE CSS</span><pre>${esc(cssText())}</pre></section><section class="global-dock-section global-insight"><span>INSIGHT</span><p>${esc(insight())}</p></section></aside></section></main>`;
+    const toolLabel = document.querySelector('.global-context small');
+    if (toolLabel) toolLabel.textContent = `TOOL · ${tool} · Visual → CSS → Parameter`;
+    const canvas = document.querySelector('.global-canvas');
+    const pageFrame = document.querySelector('.global-page-frame');
+    const presented = values.compare ? { ...defaults, selected: null, cardSpan: 1, width: 1360 } : values;
+    pageFrame?.classList.add('global-course-page');
+    pageFrame?.style.setProperty('--global-page-width', `${Math.min(Number(presented.width || 1360), 1440)}px`);
+    pageFrame?.style.setProperty('--global-sidebar', `${presented.sidebar}%`);
+    pageFrame?.style.setProperty('--global-gap', `${presented.gap}px`);
+    pageFrame?.style.setProperty('--global-padding', `${presented.padding}px`);
+    pageFrame?.style.setProperty('--global-card-span', presented.cardSpan);
+    pageFrame?.classList.toggle('has-selection', Boolean(values.selected));
+    if (canvas) {
+      canvas.dataset.device = 'desktop';
+      canvas.dataset.zoom = 'fit';
+      const canvasToolbar = canvas.parentElement?.querySelector('.global-canvas-toolbar');
+      if (canvasToolbar) canvasToolbar.innerHTML = `<span>CANVAS · ${Math.min(Number(values.width || 1360), 1440)}px</span>`;
+    }
+    pageFrame?.style.setProperty('--global-section-gap', `${presented.sectionGap || 28}px`);
+    pageFrame?.style.setProperty('--global-header-height', `${presented.headerHeight || 72}px`);
+    const makeSemantic = (selector, tagName) => {
+      const current = pageFrame?.querySelector(selector);
+      if (!current || current.tagName.toLowerCase() === tagName) return;
+      const replacement = document.createElement(tagName);
+      [...current.attributes].forEach((attribute) => replacement.setAttribute(attribute.name, attribute.value));
+      replacement.innerHTML = current.innerHTML;
+      current.replaceWith(replacement);
+    };
+    makeSemantic('.global-header', 'header');
+    makeSemantic('.global-aside', 'aside');
+    makeSemantic('.global-main', 'main');
+    if (pageFrame && !pageFrame.querySelector('.global-footer')) pageFrame.insertAdjacentHTML('beforeend', `<footer class="global-footer global-select" data-global-select="footer"><strong>${pageCopy.footer}</strong><span>${pageCopy.footerText}</span></footer>`);
+    const header = pageFrame?.querySelector('.global-header');
+    const aside = pageFrame?.querySelector('.global-aside');
+    const main = pageFrame?.querySelector('.global-main');
+    if (header) { header.style.minHeight = `${presented.headerHeight || 72}px`; header.innerHTML = `<strong>${pageCopy.brand} <small>WEB LAYOUT LAB</small></strong><nav><a>${pageCopy.course}</a><a>${pageCopy.cases}</a><a>${pageCopy.notes}</a><a>${pageCopy.about}</a></nav><small>${pageCopy.progress} 2 / 5</small><i class="global-resize-handle handle-header" data-global-drag="headerHeight"></i>`; }
+    if (aside) aside.innerHTML = `<strong>${pageCopy.chapter}</strong><nav><a>01　${pageCopy.observe} <small>${pageCopy.completed}</small></a><a class="is-current">02　${pageCopy.model}</a><a>03　${pageCopy.skeleton}</a><a>04　${pageCopy.domSpace}</a><a>05　${pageCopy.validate}</a></nav><small>2 / 5 ${pageCopy.complete}</small><i class="global-resize-handle handle-sidebar" data-global-drag="sidebar"></i>`;
+    if (main) main.innerHTML = `<span>MAIN · COURSE CONTENT</span><section class="global-course-intro global-select" data-global-select="hero"><small>COURSE / CHAPTER 01 · HERO</small><h2>理解页面布局的真正逻辑</h2><p>不从 CSS 属性开始，而从内容关系和页面空间开始。</p><button>开始学习 →</button><i class="global-resize-handle handle-content-width" data-global-drag="width"></i></section><section class="global-course-principle global-select" data-global-select="principle"><small>PRINCIPLE</small><strong>先理解内容关系，再决定空间结构。</strong><p>谁包含谁？谁先被看到？哪些区域应该共享同一条边界？</p></section><section class="global-relation-block global-select" data-global-select="relation"><small>RELATION MODEL · 内容关系 → 页面空间</small><div><span>包含关系<br><b>谁属于谁</b></span><span>流动关系<br><b>谁先出现</b></span><span>对齐关系<br><b>共享边界</b></span><span>优先级<br><b>先看什么</b></span></div><i class="global-resize-handle handle-section-gap" data-global-drag="sectionGap"></i></section><section class="global-learning-block global-select" data-global-select="content"><small>LEARNING CONTENT · 学习内容</small><p>从一个拥挤的课程页面开始，逐步建立布局判断方法。</p><div><article class="global-select global-card" data-global-select="card"><b>01</b><strong>观察问题</strong><span>阅读宽度、间距与视觉中心</span><i class="global-resize-handle handle-card" data-global-drag="cardSpan"></i></article><article class="global-select global-card" data-global-select="card"><b>02</b><strong>建立模型</strong><span>包含、流动、对齐与优先级</span></article><article class="global-select global-card" data-global-select="card"><b>03</b><strong>验证布局</strong><span>用变化解释视觉结果</span></article></div></section><section class="global-content-block global-select" data-global-select="content"><small>INTRO · CONTENT SECTION</small><h3>从内容关系到页面骨架</h3><p>稳定的容器、清晰的层级和可解释的空间关系，让页面更容易被阅读。</p><p>当正文过宽、侧栏过重、区块间距过紧时，问题通常来自关系，而不是某一个装饰属性。</p><div class="global-card-grid"><article class="global-card"><strong>内容关系</strong><small>把内容放入清晰关系</small></article><article class="global-card"><strong>空间约束</strong><small>让空间支持阅读顺序</small><i class="global-resize-handle handle-card-gap" data-global-drag="gap"></i></article></div></section><section class="global-demo-area global-select" data-global-select="demo" style="width:${values.demoWidth || 100}%"><small>DEMO AREA · 动态演示</small><div class="global-demo-bars"><i></i><i></i><i></i></div><strong>观察参数如何改变空间</strong><p>调整宽度、间距和侧栏比例，观察布局关系如何重新分配。</p><i class="global-resize-handle handle-demo-width" data-global-drag="demoWidth"></i></section><section class="global-validation-area global-select" data-global-select="notes"><small>LEARNING NOTES · VALIDATION</small><div><span>Reading Width <b>${values.width <= 1100 ? 'Comfortable' : 'Too Wide'}</b></span><span>Spacing <b>${values.gap >= 16 ? 'Good' : 'Slightly Tight'}</b></span><span>Hierarchy <b>${values.hierarchy >= 2 ? 'Good' : 'Needs Improvement'}</b></span></div><p>好的布局判断，应该能通过变化解释，而不是只靠感觉。</p></section><section class="global-next-section global-select" data-global-select="notes"><small>NEXT SECTION</small><strong>下一节：从内容到页面骨架 →</strong></section>`;
+     if (main && !zh) {
+       const globalEnglish = new Map([
+         ['理解页面布局的真正逻辑', pageCopy.heroTitle], ['不从 CSS 属性开始，而从内容关系和页面空间开始。', pageCopy.heroText], ['开始学习 →', pageCopy.start],
+         ['先理解内容关系，再决定空间结构。', pageCopy.principle], ['谁包含谁？谁先被看到？哪些区域应该共享同一条边界？', pageCopy.principleText],
+         ['RELATION MODEL · 内容关系 → 页面空间', pageCopy.relationKicker], ['包含关系', pageCopy.contain], ['谁属于谁', pageCopy.belong], ['流动关系', pageCopy.flow], ['谁先出现', pageCopy.appear], ['对齐关系', pageCopy.align], ['共享边界', pageCopy.boundary], ['优先级', pageCopy.priority], ['先看什么', pageCopy.first],
+         ['LEARNING CONTENT · 学习内容', pageCopy.learningKicker], ['从一个拥挤的课程页面开始，逐步建立布局判断方法。', pageCopy.learningIntro], ['观察问题', pageCopy.card1], ['阅读宽度、间距与视觉中心', pageCopy.card1Text], ['建立模型', pageCopy.card2], ['包含、流动、对齐与优先级', pageCopy.card2Text], ['验证布局', pageCopy.card3], ['用变化解释视觉结果', pageCopy.card3Text],
+         ['INTRO · CONTENT SECTION', pageCopy.contentKicker], ['从内容关系到页面骨架', pageCopy.contentTitle], ['稳定的容器、清晰的层级和可解释的空间关系，让页面更容易被阅读。', pageCopy.contentText1], ['当正文过宽、侧栏过重、区块间距过紧时，问题通常来自关系，而不是某一个装饰属性。', pageCopy.contentText2], ['内容关系', pageCopy.relationCard], ['把内容放入清晰关系', pageCopy.relationCardText], ['空间约束', pageCopy.spaceCard], ['让空间支持阅读顺序', pageCopy.spaceCardText],
+         ['DEMO AREA · 动态演示', pageCopy.demoKicker], ['观察参数如何改变空间', pageCopy.demoTitle], ['调整宽度、间距和侧栏比例，观察布局关系如何重新分配。', pageCopy.demoText], ['LEARNING NOTES · VALIDATION', pageCopy.notesKicker], ['好的布局判断，应该能通过变化解释，而不是只靠感觉。', pageCopy.insightText], ['下一节：从内容到页面骨架 →', pageCopy.nextText],
+       ]);
+       const walker = document.createTreeWalker(main, NodeFilter.SHOW_TEXT);
+       const textNodes = []; while (walker.nextNode()) textNodes.push(walker.currentNode);
+       textNodes.forEach((node) => { const value = node.textContent.trim(); if (globalEnglish.has(value)) node.textContent = node.textContent.replace(value, globalEnglish.get(value)); });
+     }
+     main?.querySelector(':scope > span')?.remove();
+    pageFrame?.querySelectorAll('[data-global-select]').forEach((element) => element.classList.remove('is-selected', 'tool-focus'));
+    document.querySelector('.global-measure')?.remove();
+    if (canvas) {
+      canvas.classList.toggle('show-grid', gridVisible);
+      canvas.classList.toggle('show-bounds', boundsVisible);
+      canvas.querySelector('.global-overlay')?.remove();
+      document.querySelector('.global-compare-panel,.global-validation-panel')?.remove();
+      if (values.compare) canvas.insertAdjacentHTML('afterbegin', `<div class="playground-compare-state"><span>ORIGINAL</span><button type="button" data-global-action="compare">${zh ? '查看当前版本' : 'Show current'}</button></div>`);
+    }
+    const workspacePage = document.querySelector('.global-workspace-page');
+    workspacePage?.classList.add('global-playground-page');
+    const oldHeader = document.querySelector('.global-toolbar');
+    oldHeader?.replaceWith(Object.assign(document.createElement('header'), {
+      className: 'playground-toolbar',
+       innerHTML: `<div class="playground-identity"><a class="playground-back" href="../chapters/chapter-01-section-0${sectionId}.html">← ${zh ? '返回课程' : 'Back'}</a><a class="playground-brand" href="../chapters/chapter-01-section-0${sectionId}.html"><strong>${zh ? '构页工坊' : 'Layout Workshop'}</strong><small>WEB LAYOUT PLAYGROUND</small></a></div><nav class="playground-tools" aria-label="${zh ? '布局编辑工具' : 'Layout editing tools'}"><button type="button" data-playground-mode="select" class="${editorMode === 'select' ? 'is-active' : ''}">↖ ${zh ? '选择' : 'Select'}</button><button type="button" data-playground-mode="drag" class="${editorMode === 'drag' ? 'is-active' : ''}">✥ ${zh ? '拖动' : 'Move'}</button><button type="button" data-global-action="toggle-grid" aria-pressed="${gridVisible}" class="${gridVisible ? 'is-active' : ''}"># ${zh ? '网格' : 'Grid'}</button><button type="button" data-global-action="toggle-bounds" aria-pressed="${boundsVisible}" class="${boundsVisible ? 'is-active' : ''}">□ ${zh ? '边界' : 'Bounds'}</button><button type="button" data-global-tool="dom" class="${activeTool === 'dom' ? 'is-active' : ''}">DOM</button><button type="button" data-global-tool="css" class="${activeTool === 'css' ? 'is-active' : ''}">CSS</button><button type="button" data-global-action="compare" class="${values.compare ? 'is-active' : ''}">◐ ${zh ? '对比' : 'Compare'}</button><button type="button" data-global-action="reset">↺ ${zh ? '重置' : 'Reset'}</button></nav>`
+    }));
+    document.querySelector('.global-context')?.remove();
+    document.querySelector('.global-canvas-toolbar')?.remove();
+    document.querySelector('.global-dock')?.remove();
+    document.querySelector('.global-workspace')?.classList.add('global-playground');
+    document.querySelector('.global-canvas-shell')?.insertAdjacentHTML('beforeend', '<div class="global-floating-inspector-host"></div>');
+    bind();
+    disposeElementEditor = mountWorkspaceElementEditor({
+      frame: pageFrame, canvas, edits: values.compare ? {} : (values.elementEdits || {}), selectedId: values.compare ? null : selectedNodeId, mode: editorMode, view: activeTool,
+      select: (id) => { selectedNodeId = id; const node = id ? pageFrame.querySelector(`[data-edit-id="${id}"]`) : null; values.selected = node?.closest('[data-global-select]')?.dataset.globalSelect || null; },
+      commit: (edits) => { commit(); values = { ...values, elementEdits: edits }; saveChapterWorkspaceState(chapterId, values); }, lang
+    });
+  };
+  const update = (key, value, history = true) => { if (history) commit(); values = { ...values, [key]: value, lastChanged: key }; saveChapterWorkspaceState(chapterId, values); render(); };
+  const bind = () => {
+    const issueTargets = { reading: 'content', sidebar: 'aside', spacing: 'relation', hierarchy: 'hero' };
+    document.querySelectorAll('[data-global-issue]').forEach((button) => button.addEventListener('click', () => { focusedIssue = button.dataset.globalIssue; update('selected', issueTargets[focusedIssue]); }));
+    document.querySelectorAll('[data-global-dom-select],[data-global-validation]').forEach((button) => button.addEventListener('click', () => update('selected', button.dataset.globalDomSelect || (button.dataset.globalValidation === 'reading' ? 'content' : button.dataset.globalValidation === 'spacing' ? 'relation' : button.dataset.globalValidation === 'hierarchy' ? 'hero' : 'main'))));
+    document.querySelectorAll('[data-global-input]').forEach((input) => input.addEventListener('change', () => update(input.dataset.globalInput, clamp(Number(input.value), Number(input.min), Number(input.max)))));
+    document.querySelectorAll('[data-playground-mode]').forEach((button) => button.addEventListener('click', () => { editorMode = button.dataset.playgroundMode; activeTool = editorMode; render(); }));
+    document.querySelectorAll('[data-global-tool]').forEach((button) => button.addEventListener('click', () => { activeTool = button.dataset.globalTool; render(); }));
+    document.querySelector('[data-global-action="toggle-grid"]')?.addEventListener('click', () => { gridVisible = !gridVisible; render(); });
+    document.querySelector('[data-global-action="toggle-bounds"]')?.addEventListener('click', () => { boundsVisible = !boundsVisible; render(); });
+    const beginDrag = (handle, key, event) => {
+      event.preventDefault(); event.stopPropagation(); handle.setPointerCapture?.(event.pointerId); dragStart = { key, x: event.clientX, start: { ...values } }; handle.classList.add('is-dragging');
+      const move = (moveEvent) => { if (!dragStart) return; const frame = document.querySelector('.global-page-frame'); const rect = frame?.getBoundingClientRect(); const dx = moveEvent.clientX - dragStart.x; const next = { ...dragStart.start };
+        if (dragStart.key === 'sidebar') next.sidebar = clamp(dragStart.start.sidebar + (dx / (rect?.width || 900)) * 100, 15, 45);
+        if (dragStart.key === 'gap') next.gap = clamp(dragStart.start.gap + dx / 2, 4, 64);
+        if (dragStart.key === 'sectionGap') next.sectionGap = clamp((dragStart.start.sectionGap || 28) + dx / 2, 12, 72);
+        if (dragStart.key === 'demoWidth') next.demoWidth = clamp((dragStart.start.demoWidth || 100) + dx / 4, 55, 100);
+        if (dragStart.key === 'headerHeight') next.headerHeight = clamp((dragStart.start.headerHeight || 72) + dx / 3, 48, 140);
+        if (dragStart.key === 'width') next.width = clamp(dragStart.start.width + dx * 2, 720, 1440);
+        if (dragStart.key === 'cardSpan') next.cardSpan = dx > 40 ? 2 : dx < -40 ? 1 : dragStart.start.cardSpan;
+        values = { ...next, lastChanged: dragStart.key }; render();
+      };
+      const end = () => { if (!dragStart) return; handle.classList.remove('is-dragging'); undoStack.push(JSON.stringify(dragStart.start)); redoStack = []; dragStart = null; saveChapterWorkspaceState(chapterId, values); render(); window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', end); };
+      window.addEventListener('pointermove', move); window.addEventListener('pointerup', end, { once: true });
+    };
+    document.querySelectorAll('[data-global-drag]').forEach((handle) => handle.addEventListener('pointerdown', (event) => beginDrag(handle, handle.dataset.globalDrag, event)));
+    const directDragKeys = { aside: 'sidebar', hero: 'width', main: 'width', relation: 'sectionGap', demo: 'demoWidth', card: 'cardSpan' };
+    document.querySelectorAll('[data-global-select]').forEach((element) => {
+      const key = directDragKeys[element.dataset.globalSelect];
+      if (!key) return;
+      element.addEventListener('pointerdown', (event) => {
+        if (values.selected !== element.dataset.globalSelect || event.target.closest('a,button,.global-resize-handle')) return;
+        beginDrag(element, key, event);
+      });
+    });
+    document.querySelector('[data-global-action="undo"]')?.addEventListener('click', () => { if (!undoStack.length) return; redoStack.push(snapshot()); values = JSON.parse(undoStack.pop()); saveChapterWorkspaceState(chapterId, values); render(); });
+    document.querySelector('[data-global-action="redo"]')?.addEventListener('click', () => { if (!redoStack.length) return; undoStack.push(snapshot()); values = JSON.parse(redoStack.pop()); saveChapterWorkspaceState(chapterId, values); render(); });
+    document.querySelector('[data-global-action="reset"]')?.addEventListener('click', () => { if (!window.confirm(zh ? '重置本章实验？' : 'Reset this chapter workspace?')) return; commit(); values = { ...defaults, selected: null, cardSpan: 1, width: 1360 }; saveChapterWorkspaceState(chapterId, values); render(); });
+    document.querySelectorAll('[data-global-action="compare"]').forEach((button) => button.addEventListener('click', () => update('compare', !values.compare)));
+  };
+  document.addEventListener('keydown', (event) => { if (!(event.ctrlKey || event.metaKey)) return; if (event.key.toLowerCase() === 'z') { event.preventDefault(); const action = event.shiftKey ? 'redo' : 'undo'; document.querySelector(`[data-global-action="${action}"]`)?.click(); } });
+  render();
 }
 
 function renderDemo(type) {
@@ -1106,5 +1628,6 @@ function renderAudit(target) {
 
 document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
 if (document.body.dataset.page === 'section') renderSectionPage();
+else if (document.body.dataset.page === 'workshop') renderGlobalWorkspace();
 else if (document.body.dataset.page === 'chapter') renderChapter();
 else renderHome();
